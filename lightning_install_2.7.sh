@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=light2.7    # create a short name for your job
-#SBATCH --output=install.log   # job output file
+#SBATCH --output=install2.7.log   # job output file
 #SBATCH --partition=pvc9       # cluster partition to be used
 #SBATCH --account=support-gpu  # slurm project account
 #SBATCH --nodes=1              # number of nodes
