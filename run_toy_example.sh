@@ -8,7 +8,7 @@ fi
 if [[ -z "${SLURM_GPUS_ON_NODE}" ]]; then
     SLURM_NTASKS_PER_NODE=1
 else
-    SLURM_NTASKS_PER_NODE=$((2*${SLURM_GPUS_ON_NODE})
+    SLURM_NTASKS_PER_NODE=$((2*${SLURM_GPUS_ON_NODE}))
 fi
 
 APP="toy_example.py"
