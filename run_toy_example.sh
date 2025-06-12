@@ -12,7 +12,7 @@ else
 fi
 
 APP="toy_example.py"
-CMD="srun --nodes=${SLURM_NNODES} --tasks-per-node=${SLURM_NTASKS_PER_NODE} python ${APP}"
+CMD="srun --nodes=${SLURM_NNODES} --ntasks-per-node=${SLURM_NTASKS_PER_NODE} python ${APP}"
 
 T0=${SECONDS}
 echo "Lightning run started: $(date)"
