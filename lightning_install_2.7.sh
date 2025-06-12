@@ -51,6 +51,7 @@ dependencies:
     - torchvision==0.22.0
     - intel-extension-for-pytorch==2.7.10+xpu
     - oneccl_bind_pt==2.7.0+xpu
+    - setuptools==80.8.0
 EOF
 
 conda env remove -n ${ENV_NAME} -y

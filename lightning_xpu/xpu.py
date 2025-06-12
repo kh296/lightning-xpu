@@ -21,7 +21,10 @@ import lightning.pytorch as pl
 from lightning.fabric.plugins.environments import (
     ClusterEnvironment,
     LightningEnvironment,
+    LSFEnvironment,
     MPIEnvironment,
+    SLURMEnvironment,
+    TorchElasticEnvironment,
 )
 from lightning.fabric.utilities.device_parser import _determine_root_gpu_device
 from lightning.fabric.utilities.distributed import _init_dist_connection
@@ -196,11 +199,24 @@ _AcceleratorConnector._choose_cpu_accelerator_backend = (
         _xpu_choose_gpu_accelerator_backend)
 
 
-"""
 def _xpu_choose_and_init_cluster_environment(self) -> ClusterEnvironment:
+
+    if not "SLURM_NTASKS_PER_NODE" in os.environ:
+        os.environ["SLURM_NTASKS_PER_NODE"] = str(len(self._devices_flag))
+    if "SLURM_NNODES" in os.environ:
+        self._num_nodes_flag = int(os.environ["SLURM_NNODES"])
+    else:
+        os.environ["SLURM_NNODES"] = int(self._num_nodes_flag)
+    os.environ["SLURM_NTASKS"] = str(int(os.environ["SLURM_NNODES"])
+            * int(os.environ["SLURM_NTASKS_PER_NODE"]))
+
     if isinstance(self._cluster_environment_flag, ClusterEnvironment):
         return self._cluster_environment_flag
     for env_type in (
+        # TorchElastic has the highest priority since it can also be used inside SLURM
+        TorchElasticEnvironment,
+        SLURMEnvironment,
+        LSFEnvironment,
         MPIEnvironment,
     ):
         if env_type.detect():
@@ -209,7 +225,6 @@ def _xpu_choose_and_init_cluster_environment(self) -> ClusterEnvironment:
 
 _AcceleratorConnector._choose_and_init_cluster_environment = (
         _xpu_choose_and_init_cluster_environment)
-"""
 
 
 def _xpu_choose_strategy(self) -> Union[Strategy, str]:
@@ -223,8 +238,7 @@ def _xpu_choose_strategy(self) -> Union[Strategy, str]:
                 device = "cpu"
             # TODO: lazy initialized device, then here could be self._strategy_flag = "single_device"
             return SingleDeviceStrategy(device=device)  # type: ignore
-        if len(self._parallel_devices) > 1 and _IS_INTERACTIVE:
-            return "ddp_fork"
+
         return "ddp"
 
 _AcceleratorConnector._choose_strategy = _xpu_choose_strategy
