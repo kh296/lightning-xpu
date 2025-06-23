@@ -47,7 +47,5 @@ train, val = data.random_split(dataset, [55000, 5000])
 # Step 3: Train
 # -------------------
 autoencoder = LitAutoEncoder()
-trainer = L.Trainer(max_epochs=1)
-num_workers = 8
-trainer.fit(autoencoder, data.DataLoader(train, num_workers=num_workers),
-        data.DataLoader(val, num_workers=num_workers))
+trainer = L.Trainer()
+trainer.fit(autoencoder, data.DataLoader(train), data.DataLoader(val))
