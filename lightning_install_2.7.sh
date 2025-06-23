@@ -5,7 +5,7 @@
 #SBATCH --account=support-gpu  # slurm project account
 #SBATCH --nodes=1              # number of nodes
 #SBATCH --gres=gpu:1           # number of allocated gpus per node
-#SBATCH --time=00:30:00        # total run time limit (HH:MM:SS)
+#SBATCH --time=01:00:00        # total run time limit (HH:MM:SS)
 T0=${SECONDS}
 echo "Lightning installation started: $(date)"
 
