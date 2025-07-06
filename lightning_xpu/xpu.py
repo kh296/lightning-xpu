@@ -201,8 +201,13 @@ _AcceleratorConnector._choose_cpu_accelerator_backend = (
 
 def _xpu_choose_and_init_cluster_environment(self) -> ClusterEnvironment:
 
-    if not "SLURM_NTASKS_PER_NODE" in os.environ:
-        os.environ["SLURM_NTASKS_PER_NODE"] = str(len(self._devices_flag))
+    if "SLURM_NTASKS_PER_NODE" in os.environ:
+        num_processes = min(len(self._devices_flag),
+                int(os.environ["SLURM_NTASKS_PER_NODE"]))
+        self._devices_flag = self._devices_flag[: num_processes]
+        self._parallel_devices = self._parallel_devices[: num_processes]
+    os.environ["SLURM_NTASKS_PER_NODE"] = str(len(self._devices_flag))
+
     if "SLURM_NNODES" in os.environ:
         self._num_nodes_flag = int(os.environ["SLURM_NNODES"])
     else:
