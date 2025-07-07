@@ -7,5 +7,5 @@
 #SBATCH --gres=gpu:4           # number of allocated gpus per node
 #SBATCH --time=01:00:00        # total run time limit (HH:MM:SS)
 
-source lightning-setup-2.3.sh
+source ../install/lightning-setup-2.3.sh
 source run_toy_example.sh
