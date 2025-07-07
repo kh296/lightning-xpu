@@ -11,9 +11,11 @@ else
     SLURM_NTASKS_PER_NODE=$((2*${SLURM_GPUS_ON_NODE}))
 fi
 
+echo "Nodes being used:"
+srun hostname
+echo ""
 T1=${SECONDS}
 echo "Lightning initial imports started: $(date)"
-srun hostname
 srun python -c "import lightning_xpu"
 echo "Lightning initial imports completed: $(date)"
 echo "Initial imports: $((${SECONDS}-${T1})) seconds"
