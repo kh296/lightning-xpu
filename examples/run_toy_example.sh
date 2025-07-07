@@ -11,12 +11,20 @@ else
     SLURM_NTASKS_PER_NODE=$((2*${SLURM_GPUS_ON_NODE}))
 fi
 
+T1=${SECONDS}
+echo "Lightning initial imports started: $(date)"
+srun hostname
+srun python -c "import lightning_xpu"
+echo "Lightning initial imports completed: $(date)"
+echo "Initial imports: $((${SECONDS}-${T1})) seconds"
+echo ""
+
 APP="toy_example.py"
 CMD="srun --nodes=${SLURM_NNODES} --ntasks-per-node=${SLURM_NTASKS_PER_NODE} python ${APP}"
 
-T0=${SECONDS}
+T2=${SECONDS}
 echo "Lightning run started: $(date)"
 echo "${CMD}"
 ${CMD}
 echo "Lightning run completed: $(date)"
-echo "Run time: $((${SECONDS}-${T0})) seconds"
+echo "Run time: $((${SECONDS}-${T2})) seconds"
