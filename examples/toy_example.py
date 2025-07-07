@@ -1,11 +1,18 @@
-# This is the PyTorch Lightning example from the Quick start section at:
-# - https://pypi.org/project/lightning/
-# with the modifications:
-# - the package lighning_xpu is imported;
-# - the trainer object is initialised with max_epochs=1.
+"""
+PyTorch Lightning example.
 
-# PyTorch Lightning is licensed under version 2.0 of the Apache License:
-# - https://www.apache.org/licenses/LICENSE-2.0.html
+This is the PyTorch Lightning example from:
+
+- https://github.com/Lightning-AI/pytorch-lightning#pytorch-lightning-example
+
+with the modifications:
+
+- the package lightning_xpu is imported;
+- the Trainer object is initialised with max_epochs=1.
+
+PyTorch Lightning is licensed under version 2.0 of the Apache License:
+- https://www.apache.org/licenses/LICENSE-2.0.html
+"""
 
 # main.py
 # ! pip install torchvision
