@@ -380,7 +380,7 @@ def _xpu_setup_model(self, model: Module) -> DistributedDataParallel:
         if "cuda" == self.root_device.type:
             ctx = torch.cuda.stream(torch.cuda.Stream())
         elif "xpu" == self.root_device.type:
-            ctx = torch.xpu.stream(torch.cuda.Stream())
+            ctx = torch.xpu.stream(torch.xpu.Stream())
         else: 
             ctx = nullcontext()
     with ctx:
