@@ -1,3 +1,12 @@
+# This is the PyTorch Lightning example from the Quick start section at:
+# - https://pypi.org/project/lightning/
+# with the modifications:
+# - the package lighning_xpu is imported;
+# - the trainer object is initialised with max_epochs=1.
+
+# PyTorch Lightning is licensed under version 2.0 of the Apache License:
+# - https://www.apache.org/licenses/LICENSE-2.0.html
+
 # main.py
 # ! pip install torchvision
 import torch, torch.nn as nn, torch.utils.data as data, torchvision as tv, torch.nn.functional as F
@@ -47,5 +56,5 @@ train, val = data.random_split(dataset, [55000, 5000])
 # Step 3: Train
 # -------------------
 autoencoder = LitAutoEncoder()
-trainer = L.Trainer()
+trainer = L.Trainer(max_epochs=1)
 trainer.fit(autoencoder, data.DataLoader(train), data.DataLoader(val))
