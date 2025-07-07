@@ -395,7 +395,7 @@ def _xpu_setup_distributed(self) -> None:
     self._process_group_backend = self._get_process_group_backend()
     assert self.cluster_environment is not None
     _init_dist_connection(self.cluster_environment, self._process_group_backend, timeout=self._timeout)
-    if "ccl" == elf._process_group_backend:
+    if "ccl" == self._process_group_backend:
         os.environ.setdefault("CCL_WORKER_OFFLOAD", "0")
         # https://www.intel.com/content/www/us/en/docs/oneccl/developer-guide-reference/2021-9/environment-variables.html
         os.environ.setdefault("CCL_ATL_TRANSPORT", "ofi")
