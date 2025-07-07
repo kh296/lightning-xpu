@@ -373,7 +373,7 @@ DDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
 def _xpu_setup_model(self, model: Module) -> DistributedDataParallel:
     """Wraps the model into a :class:`~torch.nn.parallel.distributed.DistributedDataParallel` module."""
     device_ids = self.determine_ddp_device_ids()
-    log.debug(f"setting up DDP model with device ids: {device_ids}, kwargs: {self._ddp_kwargs}")
+    ddp_log.debug(f"setting up DDP model with device ids: {device_ids}, kwargs: {self._ddp_kwargs}")
     if device_ids is None:
         ctx = nullcontext()
     else:
@@ -389,7 +389,7 @@ def _xpu_setup_model(self, model: Module) -> DistributedDataParallel:
 DDPStrategy._setup_model = _xpu_setup_model
 
 def _xpu_setup_distributed(self) -> None:
-    log.debug(f"{self.__class__.__name__}: setting up distributed...")
+    ddp_log.debug(f"{self.__class__.__name__}: setting up distributed...")
     reset_seed()
     self.set_world_ranks()
     self._process_group_backend = self._get_process_group_backend()
