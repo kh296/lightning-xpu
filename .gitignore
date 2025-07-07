@@ -6,3 +6,5 @@ __pycache__
 install/lightning-setup*.sh
 install/lightning*.yml
 *.log
+*logs/
+*venv/
