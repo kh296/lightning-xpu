@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lightning_xpu"
+version = "0.0.1"
+description = "Package to enable use of Intel GPUs with PyTorch Lightning"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "Apache-2.0"
+license-files = ["LICENSE.txt"]
+
+dependencies = [
+    "lightning",
+]

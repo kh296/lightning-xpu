@@ -18,7 +18,7 @@ module load rhel9/default-dawn
 module load intel-oneapi-ccl/2021.15.0
 
 # Initialise conda.
-eval "\$(~/miniconda3/bin/conda shell.bash hook)"
+source ~/miniconda3/bin/activate
 
 # Activate environment.
 EOF
@@ -52,6 +52,7 @@ dependencies:
     - intel-extension-for-pytorch==2.7.10+xpu
     - oneccl_bind_pt==2.7.0+xpu
     - setuptools==80.8.0
+    - -e ..
 EOF
 
 conda env remove -n ${ENV_NAME} -y
