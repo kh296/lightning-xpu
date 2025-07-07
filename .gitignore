@@ -8,3 +8,4 @@ install/lightning*.yml
 *.log
 *logs/
 *venv/
+MNIST/
