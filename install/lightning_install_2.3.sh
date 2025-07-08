@@ -30,6 +30,7 @@ ${CMD}
 pip install --upgrade pip
 pip install py-cpuinfo
 pip install deepspeed lightning[extra] litmodels mpi4py
+pip install -e ..
 
 echo "Lightning installation completed: $(date)"
 echo "Installation time: $((${SECONDS}-${T0})) seconds"
