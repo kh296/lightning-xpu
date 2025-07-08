@@ -1,3 +1,47 @@
+"""
+Module enabling use of Intel GPUs (XPUs) with PyTorch Lightning.
+
+It is compatible with accelerators supported by PyTorch Lightning as standard.
+
+This module defines an Accelerator subclass:
+- XPUAccelerator: accelerator for Intel GPUs (XPUs).
+
+On import, this module substitutes modified versions of some functions and
+methods defined in the lightning package of PyTorch Lightning,
+to include handling of XPUs:
+
+- function lightning.pytorch.trainer.setup._log_device_info():
+  - modified to recognise XPUAccelerator as representing a GPU,
+    and to indicate whether available;
+
+- methods substituted for class lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector
+  - _choose_auto_accelerator():
+    modified to allow automatic selection of "xpu" as accelerator type;
+  - _choose_gpu_accelerator_backend():
+    modified to allow selection of "xpu" as gpu backend;
+  - _choose_and_init_cluster_environment():
+    modified to set default values for selected Slurm environment variables;
+  - _choose_strategy():
+    modified to allow automatic selection of "single_device" or "ddp"
+    as strategy for "xpu" device.
+
+- methods substituted for class lightning.pytorch.strategies.ddp.DDPStrategy:
+  - _get_process_group_backend():
+    modified to set "ccl" as process-group backend for "xpu" device;
+  - _setup_model(): modified to handle "xpu" device;
+  - _setup_distributed():
+    modified to set default values for selected environment variables
+    relevant to "ccl" distributed processing.
+
+The class XPUAccelerator has been adapted from the class:
+- lightning.pytorch.accelerators.cuda.CUDAAccelerator
+
+Modified functions and methods are based on the original functions
+and methods in the lightning package of PyTorch Lightning.
+
+PyTorch Lightning is licensed under version 2.0 of the Apache License:
+- https://www.apache.org/licenses/LICENSE-2.0.html
+"""
 import os
 from contextlib import nullcontext
 from functools import lru_cache
@@ -61,7 +105,7 @@ class XPUAccelerator(Accelerator):
         """
         Raises:
             MisconfigurationException:
-                If the selected device is not an Intel GPU (XPU).
+                If the selected device is not an XPU.
         """
         if device.type != "xpu":
             raise MisconfigurationException(
@@ -165,13 +209,13 @@ class XPUAccelerator(Accelerator):
 
 @lru_cache(1)
 def num_xpu_devices() -> int:
-    """Return the number of available Intel GPU devices."""
+    """Return the number of available XPU devices."""
     return torch.xpu.device_count()
 
 
 def _get_all_visible_xpu_devices() -> List[int]:
     """
-    Return a list of all visible Intel GPU devices.
+    Return a list of all visible XPU devices.
     The devices returned depend on the values set for the environment
     variables ``ZE_FLAT_DEVICE_HIERARCHY`` and ``ZE_AFFINITY_MASK``
     """
@@ -272,7 +316,7 @@ def _xpu_choose_gpu_accelerator_backend() -> str:
         return "xpu"
     raise MisconfigurationException("No supported gpu backend found!")
 
-_AcceleratorConnector._choose_cpu_accelerator_backend = (
+_AcceleratorConnector._choose_gpu_accelerator_backend = (
         _xpu_choose_gpu_accelerator_backend)
 
 

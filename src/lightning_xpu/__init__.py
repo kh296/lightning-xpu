@@ -1,23 +1,20 @@
-# Copyright The Lightning AI team.
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Package enabling use of Intel GPUs (XPUs) with PyTorch Lightning.
+
+Licensed under the version 2.0 of the Apache License (Apache-2.0):
+- https://www.apache.org/licenses/LICENSE-2.0.html
+
+This package adds to, and modifies, the lightning package of PyTorch Lightning
+as detailed in the module lighting_xpu.xpu.
+
+PyTorch Lightning is licensed under version 2.0 of the Apache License:
+- https://www.apache.org/licenses/LICENSE-2.0.html
+"""
 import sys
 
-# from lightning.fabric.accelerators import find_usable_cuda_devices  # noqa: F401
 from lightning.pytorch.accelerators import AcceleratorRegistry
-#from lightning.fabric.accelerators.registry import _AcceleratorRegistry
 from lightning.fabric.utilities.registry import _register_classes
 from lightning.pytorch.accelerators.accelerator import Accelerator
 from lightning_xpu.xpu import XPUAccelerator
 
-#AcceleratorRegistry = _AcceleratorRegistry()
 _register_classes(AcceleratorRegistry, "register_accelerators", sys.modules[__name__], Accelerator)
