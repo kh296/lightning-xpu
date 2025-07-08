@@ -1,14 +1,27 @@
 #!/bin/bash
-#SBATCH --job-name=light2.7    # create a short name for your job
-#SBATCH --output=install2.7.log   # job output file
-#SBATCH --partition=pvc9       # cluster partition to be used
-#SBATCH --account=support-gpu  # slurm project account
-#SBATCH --nodes=1              # number of nodes
-#SBATCH --gres=gpu:1           # number of allocated gpus per node
-#SBATCH --time=01:00:00        # total run time limit (HH:MM:SS)
+#SBATCH --job-name=light2.7     # create a short name for your job
+#SBATCH --output=install2.7.log # job output file
+#SBATCH --partition=pvc9        # cluster partition to be used
+#SBATCH --account=support-gpu   # slurm project account
+#SBATCH --nodes=1               # number of nodes
+#SBATCH --gres=gpu:1            # number of allocated gpus per node
+#SBATCH --time=01:00:00         # total run time limit (HH:MM:SS)
+
+# Script for installing lightning on Dawn supercomputer,
+# including user installation of pytorch (version 2.7).
+#
+# This installation relies on the user having a miniconda installation
+# at ~/miniconda3/bin/activate.  For instruction for installing miniconda, see:
+# https://www.anaconda.com/docs/getting-started/miniconda/install#linux
+#
+# After installation, the environment for running lightning applications
+# can be activated by sourcing the file lightning-setup-2.7.sh, created
+# in this directory.
+
 T0=${SECONDS}
 echo "Lightning installation started: $(date)"
 
+# Create script for environment setup.
 cat <<EOF >lightning-setup-2.7.sh
 # Setup script for enabling lightning on Dawn supercomputer
 # Generated: $(date)
@@ -23,6 +36,7 @@ source ~/miniconda3/bin/activate
 # Activate environment.
 EOF
 
+# Define installation environment.
 source lightning-setup-2.7.sh
 
 # Create and activate conda environment.
@@ -59,7 +73,6 @@ conda env remove -n ${ENV_NAME} -y
 conda env create -f ${ENV_NAME}.yml
 CMD="conda activate ${ENV_NAME}"
 echo ${CMD} >> lightning-setup-2.7.sh
-${CMD}
 
 echo "Lightning installation completed: $(date)"
 echo "Installation time: $((${SECONDS}-${T0})) seconds"
