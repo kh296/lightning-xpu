@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=toy2.3      # create a short name for your job
+#SBATCH --job-name=toy2.7      # job output file
 #SBATCH --output=%x.log        # job output file
 #SBATCH --partition=pvc9       # cluster partition to be used
 #SBATCH --account=support-gpu  # slurm project account
@@ -23,6 +23,9 @@
 # or can be submitted to a Slurm batch system.
 #     sbatch run_toy_example.sh
 #     sbatch --job-name=toy2.7 run_toy_example.sh # use PyTorch 2.7
+
+T1=${SECONDS}
+echo "Job start on $(hostname): $(date)"
 
 # Exit at first failure.
 set -e
@@ -48,25 +51,49 @@ fi
 if [[ -z "${PYTORCH_VERSION}" ]]; then
     PYTORCH_VERSION=$(echo "${SLURM_JOB_NAME}" | grep -Eo "[0-9]+(\.[0-9]+)?")
 fi
+echo ""
 source ../install/lightning-setup-${PYTORCH_VERSION}.sh
+echo ""
 
 # Define command to run depending on availability of srun.
 APP="toy_example.py"
 if command -v srun 1>/dev/null 2>&1
 then
-    echo "Nodes being used:"
+    echo "Nodes used:"
     srun hostname
+    echo ""
+    echo "Performing initial import of lightning_xpu on each node"
+    T2=${SECONDS}
+    srun python -c "import lightning_xpu"
+    echo "Import time 1: $((${SECONDS}-${T2})) seconds"
+    echo "Performing second import of lightning_xpu on each node"
+    T2=${SECONDS}
+    srun python -c "import lightning_xpu"
+    echo "Import time 2: $((${SECONDS}-${T2})) seconds"
     CMD="srun --nodes=${SLURM_NNODES} --ntasks-per-node=${SLURM_NTASKS_PER_NODE} python ${APP}"
 else
     echo "Hostname: $(hostname)"
+    echo ""
+    echo "Performing initial import of lightning_xpu"
+    T2=${SECONDS}
+    echo "Import time: $((${SECONDS}-${T2})) seconds"
+    python -c "import lightning_xpu"
     CMD="python ${APP}"
 fi
+
 echo ""
+echo "Checking/downloading dataset"
+T3=${SECONDS}
+python -c "import torchvision as tv; tv.datasets.MNIST('.', download=True)"
+echo "Time checking/downloading dataset: $((${SECONDS}-${T3})) seconds"
 
 # Run and time application.
-T0=${SECONDS}
+T4=${SECONDS}
 echo "Lightning run started: $(date)"
 echo "${CMD}"
 ${CMD}
+echo ""
 echo "Lightning run completed: $(date)"
-echo "Run time: $((${SECONDS}-${T0})) seconds"
+echo "Run time: $((${SECONDS}-${T4})) seconds"
+echo ""
+echo "Job time: $((${SECONDS}-${T1})) seconds"
