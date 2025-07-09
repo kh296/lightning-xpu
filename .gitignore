@@ -3,8 +3,8 @@
 build
 __pycache__
 *.egg-info/
-install/lightning-setup*.sh
-install/lightning*.yml
+lightning-setup*.sh
+lightning*.yml
 *.log
 *logs/
 *venv/
