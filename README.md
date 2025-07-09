@@ -1,93 +1,91 @@
 # lightning-xpu
 
+`lightning-xpu`  is a Python package to enable use of Intel GPUs (XPUs) with [PyTorch Lightning](https://github.com/Lightning-AI/pytorch-lightning).  It is a work in progress, tested for [Intel Data Center GPU Max 1550](https://www.intel.com/content/www/us/en/products/sku/232873/intel-data-center-gpu-max-1550/specifications.html) GPUs, on the [Dawn supercomputer](https://www.hpc.cam.ac.uk/d-w-n).
 
+This package defines an `Accelerator` subclass, `XPUAccelerator` (accelerator name: `"xpu"`).  In addition, on import, it substitutes modified versions of a function, and of some of the methods of two classes:
+- function: `lightning.pytorch.trainer.setup._log_device_info()`
+- class: `lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector`
+	- `_choose_auto_accelerator()`
+	- `_choose_gpu_accelerator_backend()`
+	-  `_choose_and_init_cluster_environment()`
+	-  `_choose_strategy()`
+-  class: `lightning.pytorch.strategies.ddp.DDPStrategy`
+	- `_get_process_group_backend()`
+	- `_setup_model()`
+	-  `_setup_distributed()`
 
-## Getting started
+The packages enables use of the `"single_device"` and `"ddp"` strategies with `"xpu"` accelerators, while maintaining compatibility with all other accelerator-strategy combinations supported by PyTorch Lightning.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Instructions are given below for user installation of `lightning_xpu` on Dawn, and for running a PyTorch Lightning toy example.  Basic information is then given for running other PyTorch Lightning applications on Dawn.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Installation on Dawn
 
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+The software for XPU-enabled PyTorch Lightning can be installed as follows:
+- Connect to Dawn:
 ```
-cd existing_repo
-git remote add origin https://gitlab.developers.cam.ac.uk/kh296/lightning-xpu.git
-git branch -M main
-git push -uf origin main
+ssh <username>@login-dawn.hpc.cam.ac.uk
 ```
+- If not already installed in the user's area, install miniconda, following instructions at:
+    https://www.anaconda.com/docs/getting-started/miniconda/install#linux
+    To avoid running out of home disk space, it can be a good idea to install to
+    `~/rds/hpc-work/miniconda3`, and create a link to this: 
+  ```
+  ln -s ~/rds/hpc-work/miniconda3 ~/miniconda3
+  ```
+- Clone this repository:
+    ```
+    git clone https://gitlab.developers.cam.ac.uk/kh296/lightning-xpu
+    ```
+- Within the cloned repository, go to the `install` directory:
+    ```
+    cd lightning-xpu/install
+    ```
+- Submit a batch job to perform the installation, using the script [install_lightning_2.7.sh](install/install_lightning_2.7.sh):
+    ```
+    sbatch install_lightning_2.7.sh
+     ```
+     This installs PyTorch Lightning based on [PyTorch 2.7](https://pytorch.org/blog/pytorch-2-7/).  The job writes to a log file `install2.7.log`, and creates a script `lightning-setup-2.7.sh` that can subsequently be sourced to perform environment setup.  The installation job should take about 30 minutes to complete.  If it's successful, the log file will end with information about the time taken for the installation.
 
-## Integrate with your tools
+## Running PyTorch Lightning toy example on Dawn
 
-- [ ] [Set up project integrations](https://gitlab.developers.cam.ac.uk/kh296/lightning-xpu/-/settings/integrations)
+Continuing after installation of the software for XPU-enabled PyTorch Lightning, the [PyTorch Lightning toy example](https://github.com/Lightning-AI/pytorch-lightning?tab=readme-ov-file#pytorch-lightning-example) can be run on Dawn as follows:
 
-## Collaborate with your team
+- Within the cloned repository, go to the `examples` directory:
+	```
+	cd ../examples
+	```
+	This directory contains a Python application [toy_example.py](examples/toy_example.py), and a script for running it, [run_toy_example.sh](examples/run_toy_example.sh).   The application is a copy of the [PyTorch Lightning toy example](https://github.com/Lightning-AI/pytorch-lightning?tab=readme-ov-file#pytorch-lightning-example), but with addition of
+	```
+	import lightning_xpu
+	```
+	and with the number of training epochs set to 1.
+- The toy example can be run on the batch system, or may be run interactively from a Dawn compute node.
+	- To run  on the batch system, edit the script [run_toy_example.sh](examples/run_toy_example.sh) to set own project, then use:
+		```
+		sbatch run_toy_example.sh
+		```
+		By default, the job writes to `toy2.7.log`
+	- To run interactively, obtain an allocation of, for example, two compute nodes:
+		```
+		# Substitute own project for <project>.
+		sintr -t 01:00:00 -N 2 --gres=gpu:4 -A <project> -p pvc9
+		./run_toy_example.sh
+		```
+	In both cases, the application will make use of all available GPU tiles (8, which is twice the number of GPUs), on the number of nodes requested.  Note that each initial import on a node of the modules on which the application depends can be quite slow; subsequent imports, until disconnect from the node, are faster.  A number of warnings from the Intel extensions to PyTorch are printed during initialisation, and are repeated for each GPU tile.  If the application runs successfully, the final output will indicate that training has completed for the requested number of epochs (one), and will give information both on the start-to-finish time (including the time for the initial imports), and the application run time.  The single-epoch training with the toy example is intended only as a check that the software is working.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Running other PyTorch Lightning applications on Dawn
 
-## Test and Deploy
+To run a PyTorch Lightning application on Dawn, the basic requirements are:
 
-Use the built-in continuous integration in GitLab.
+- Before any use of the `lightning` package, the application should include:
+	```
+	import lightning_xpu
+	```
+- The environment setup for running the application should be performed with:
+	```
+	# Substitue for <path_to_setup_script>
+	# the path to the script lighting-setup-2.7.sh created during installation.
+	# The user may move this script from its original location.
+	source <path_to_setup_script>
+	```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
