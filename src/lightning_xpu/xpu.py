@@ -15,6 +15,8 @@ to include handling of XPUs:
     and to indicate whether available;
 
 - methods substituted for class lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector
+  - _check_strategy_and_fallback():
+    modified to allow "fsdp" as strategy with "xpu" as accelerator type;
   - _choose_auto_accelerator():
     modified to allow automatic selection of "xpu" as accelerator type;
   - _choose_gpu_accelerator_backend():
@@ -33,6 +35,20 @@ to include handling of XPUs:
     modified to set default values for selected environment variables
     relevant to "ccl" distributed processing.
 
+- methods substituted for class lightning.pytorch.strategies.fsdp.FSDPStrategy:
+  - barrier():
+    modified to allow "ccl" as backend for distributed processing;
+  - setup_environment():
+    modified to set "xpu" as device type for "ccl" as process-group backend;
+  - _get_process_group_backend():
+    modified to set "ccl" as process-group backend for "xpu" device (same as
+    lightning.pytorch.strategies.ddp.DDPStrategy._get_process_group_backend()).
+
+- method substituted for class lightning.pytorch.strategies.model_parallel.ModelParallelStrategy:
+  - barrier():
+    modified to allow "ccl" as backend for distributed processing (same as
+    lightning.pytorch.strategies.fsdp.FSDPStrategy.barrier()):
+
 The class XPUAccelerator has been adapted from the class:
 - lightning.pytorch.accelerators.cuda.CUDAAccelerator
 
@@ -45,7 +61,7 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 import os
 from contextlib import nullcontext
 from functools import lru_cache
-from typing import Any, Dict, List, MutableSequence, Union
+from typing import Any, Dict, List, MutableSequence, Optional, Union
 from typing_extensions import override
 
 import torch
@@ -72,7 +88,10 @@ from lightning.fabric.plugins.environments import (
     TorchElasticEnvironment,
 )
 from lightning.fabric.utilities.device_parser import _determine_root_gpu_device
-from lightning.fabric.utilities.distributed import _init_dist_connection
+from lightning.fabric.utilities.distributed import (
+        _distributed_is_initialized,
+        _init_dist_connection,
+        )
 from lightning.fabric.utilities.imports import _IS_INTERACTIVE
 from lightning.fabric.utilities.seed import reset_seed
 from lightning.fabric.utilities.types import _DEVICE
@@ -91,10 +110,13 @@ from lightning.pytorch.utilities.imports import _habana_available_and_importable
 from lightning.pytorch.utilities.rank_zero import rank_zero_info, rank_zero_warn
 from lightning.pytorch.strategies import (
         DDPStrategy,
+        FSDPStrategy,
+        ModelParallelStrategy,
         SingleDeviceStrategy,
         Strategy
         )
-from lightning.pytorch.strategies.ddp import log as ddp_log
+from lightning.pytorch.strategies.ddp import _DDP_FORK_ALIASES, log as ddp_log
+from lightning.pytorch.strategies.fsdp import log as fsdp_log
 
 
 class XPUAccelerator(Accelerator):
@@ -396,6 +418,32 @@ def _xpu_choose_strategy(self) -> Union[Strategy, str]:
 
 _AcceleratorConnector._choose_strategy = _xpu_choose_strategy
 
+
+def _xpu_check_strategy_and_fallback(self) -> None:
+    """Checks edge cases when the strategy selection was a string input, and we need to fall back to a different
+    choice depending on other parameters or the environment."""
+    # current fallback and check logic only apply to user pass in str config and object config
+    # TODO this logic should apply to both str and object config
+    strategy_flag = "" if isinstance(self._strategy_flag, Strategy) else self._strategy_flag
+
+    if (
+        strategy_flag in FSDPStrategy.get_registered_strategies() or type(self._strategy_flag) is FSDPStrategy
+    ) and self._accelerator_flag not in ("cuda", "gpu", "xpu"):
+        raise ValueError(
+            f"The strategy `{FSDPStrategy.strategy_name}` requires a GPU accelerator, but got:"
+            f" {self._accelerator_flag}"
+        )
+    if strategy_flag in _DDP_FORK_ALIASES and "fork" not in torch.multiprocessing.get_all_start_methods():
+        raise ValueError(
+            f"You selected `Trainer(strategy='{strategy_flag}')` but process forking is not supported on this"
+            f" platform. We recommend `Trainer(strategy='ddp_spawn')` instead."
+        )
+    if strategy_flag:
+        self._strategy_flag = strategy_flag
+
+_AcceleratorConnector._check_strategy_and_fallback = _xpu_check_strategy_and_fallback
+
+
 #
 # Modifications to lightning.pytorch.strategies.DDPStrategy
 #
@@ -449,3 +497,50 @@ def _xpu_setup_distributed(self) -> None:
         os.environ.setdefault("ZE_AFFINITY_MASK", mask)
 
 DDPStrategy.setup_distributed = _xpu_setup_distributed
+
+#
+# Modifications to lightning.pytorch.strategies.FSDPStrategy
+#
+
+def _xpu_barrier(self, name: Optional[str] = None) -> None:
+    if not _distributed_is_initialized():
+        return
+    if torch.distributed.get_backend() in ["nccl", "ccl"]:
+        torch.distributed.barrier(device_ids=self._determine_device_ids())
+    else:
+        torch.distributed.barrier()
+
+FSDPStrategy.barrier = _xpu_barrier
+
+
+def _xpu_setup_environment(self) -> None:
+    super(type(self), self).setup_environment()
+    fsdp_log.debug(f"{self.__class__.__name__}: setting up distributed...")
+    reset_seed()
+
+    # determine which process we are and world size
+    self.set_world_ranks()
+
+    self._process_group_backend = self._get_process_group_backend()
+    assert self.cluster_environment is not None
+    _init_dist_connection(self.cluster_environment, self._process_group_backend, timeout=self._timeout)
+
+    # if 'device_mesh' in the `kwargs` is provided as a tuple, update it into the `DeviceMesh` object here
+    if isinstance(self.kwargs.get("device_mesh"), tuple):
+        from torch.distributed.device_mesh import init_device_mesh
+
+        device_type = "xpu" if "ccl" == self._process_group_backend else "cuda"
+        self.kwargs["device_mesh"] = init_device_mesh(device_type, self.kwargs["device_mesh"])
+
+FSDPStrategy.setup_environment = _xpu_setup_environment
+
+# Function _xpu_get_prcess_group_backend()
+# defined in modifications to lightning.pytorch.strategies.DDPStrategy
+FSDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
+
+#
+# Modifications to lightning.pytorch.strategies.ModelParallelStrategy
+#
+# Function _xpu_barrier()
+# defined in modifications to lightning.pytorch.strategies.FSDPStrategy
+ModelParallelStrategy.barrier = _xpu_barrier
