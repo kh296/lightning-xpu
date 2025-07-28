@@ -110,6 +110,7 @@ from lightning.pytorch.utilities.imports import _habana_available_and_importable
 from lightning.pytorch.utilities.rank_zero import rank_zero_info, rank_zero_warn
 from lightning.pytorch.strategies import (
         DDPStrategy,
+        DeepSpeedStrategy,
         FSDPStrategy,
         ModelParallelStrategy,
         SingleDeviceStrategy,
@@ -513,7 +514,7 @@ def _xpu_barrier(self, name: Optional[str] = None) -> None:
 FSDPStrategy.barrier = _xpu_barrier
 
 
-def _xpu_setup_environment(self) -> None:
+def _xpu_fsdp_setup_environment(self) -> None:
     super(type(self), self).setup_environment()
     fsdp_log.debug(f"{self.__class__.__name__}: setting up distributed...")
     reset_seed()
@@ -532,7 +533,7 @@ def _xpu_setup_environment(self) -> None:
         device_type = "xpu" if "ccl" == self._process_group_backend else "cuda"
         self.kwargs["device_mesh"] = init_device_mesh(device_type, self.kwargs["device_mesh"])
 
-FSDPStrategy.setup_environment = _xpu_setup_environment
+FSDPStrategy.setup_environment = _xpu_fsdp_setup_environment
 
 # Function _xpu_get_prcess_group_backend()
 # defined in modifications to lightning.pytorch.strategies.DDPStrategy
@@ -541,6 +542,19 @@ FSDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
 #
 # Modifications to lightning.pytorch.strategies.ModelParallelStrategy
 #
+
 # Function _xpu_barrier()
 # defined in modifications to lightning.pytorch.strategies.FSDPStrategy
 ModelParallelStrategy.barrier = _xpu_barrier
+
+#
+# Modifications to lightning.pytorch.strategies.DeepSpeedStrategy
+#
+def _xpu_deepspeed_setup_environment(self) -> None:
+    if not isinstance(self.accelerator, (CUDAAccelerator, XPUAccelerator)):
+        raise RuntimeError(
+            f"The DeepSpeed strategy is only supported on CUDA GPUs and on Intel  GPUs (XPUs) but `{self.accelerator.__class__.__name__}`" " is used."
+        )
+    super(type(self), self).setup_environment()
+
+DeepSpeedStrategy.setup_environment = _xpu_deepspeed_setup_environment
