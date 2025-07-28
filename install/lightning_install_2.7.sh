@@ -10,9 +10,9 @@
 # Script for installing lightning on Dawn supercomputer,
 # including user installation of pytorch (version 2.7).
 #
-# This installation relies on the user having a miniconda installation
-# at ~/miniconda3/bin/activate.  For instruction for installing miniconda, see:
-# https://www.anaconda.com/docs/getting-started/miniconda/install#linux
+# This installation relies on the user having a miniforge installation
+# at ~/miniforge3/bin/activate.  For instruction for installing miniforge, see:
+# https://conda-forge.org/download/
 #
 # After installation, the environment for running lightning applications
 # can be activated by sourcing the file lightning-setup-2.7.sh, created
@@ -31,7 +31,7 @@ module load rhel9/default-dawn
 module load intel-oneapi-ccl/2021.15.0
 
 # Initialise conda.
-source ~/miniconda3/bin/activate
+source ~/miniforge3/bin/activate
 
 # Activate environment.
 EOF

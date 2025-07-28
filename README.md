@@ -32,12 +32,12 @@ The software for XPU-enabled PyTorch Lightning can be installed as follows:
 ```
 ssh <username>@login-dawn.hpc.cam.ac.uk
 ```
-- If not already installed in the user area, install miniconda, following instructions at:
-    https://www.anaconda.com/docs/getting-started/miniconda/install#linux
+- If not already installed in the user area, install miniforge, following instructions at:
+    [https://conda-forge.org/download/](https://conda-forge.org/download/)
     To avoid running out of home disk space, it can be a good idea to install to
-    `~/rds/hpc-work/miniconda3` (not backed up), and to create a link to this: 
+    `~/rds/hpc-work/miniforge3` (not backed up), and to create a link to this: 
   ```
-  ln -s ~/rds/hpc-work/miniconda3 ~/miniconda3
+  ln -s ~/rds/hpc-work/miniforge3 ~/miniforge3
   ```
 - Clone this repository:
     ```
