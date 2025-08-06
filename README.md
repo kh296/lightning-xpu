@@ -72,10 +72,11 @@ Starting from the `install` directory, the [PyTorch Lightning toy example](https
 		sbatch run_toy_example.sh
 		```
 		By default, the job writes to `toy2.7.log`
-	- To run interactively, first obtain an allocation of, for example, two compute nodes:
+	- To run interactively, first obtain an allocation of, for example, two compute nodes, then start the script:
 		```
 		# Substitute own project account for <project>.
-		sintr -t 01:00:00 -N 2 --gres=gpu:4 -A <project> -p pvc9 ./run_toy_example.sh
+		sintr -t 01:00:00 -N 2 --gres=gpu:4 -A <project> -p pvc9
+        ./run_toy_example.sh
 		```
 	In both cases, the application will make use of all visible (or exposed) devices on the number of nodes requested.  By default, the visible devices are the GPU stacks (or tiles), and there are two of these per GPU card on Dawn.
 	
