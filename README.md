@@ -2,7 +2,7 @@
 
 `lightning-xpu`  is a Python package to enable use of Intel GPUs (XPUs) with [PyTorch Lightning](https://github.com/Lightning-AI/pytorch-lightning).  It is a work in progress, tested for [Intel Data Center GPU Max 1550](https://www.intel.com/content/www/us/en/products/sku/232873/intel-data-center-gpu-max-1550/specifications.html) GPUs, on the [Dawn supercomputer](https://www.hpc.cam.ac.uk/d-w-n).
 
-This package defines an `Accelerator` subclass, `XPUAccelerator` (accelerator name: `"xpu"`).  In addition, on import, it substitutes modified versions of a function, and of some of the methods of four classes:
+This package defines an `Accelerator` subclass, `XPUAccelerator` (accelerator name: `"xpu"`).  In addition, on import, it substitutes modified versions of one function, and of some of the methods of four classes:
 - function: `lightning.pytorch.trainer.setup._log_device_info()`
 - class: `lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector`
 	- `_check_strategy_and_fallback()`
@@ -23,7 +23,7 @@ This package defines an `Accelerator` subclass, `XPUAccelerator` (accelerator na
 
 The packages enables use of the `"single_device"`, `"ddp"` and `"fsdp"` strategies with `"xpu"` accelerators, while maintaining compatibility with all other accelerator-strategy combinations supported by PyTorch Lightning.
 
-Instructions are given below for user installation of `lightning_xpu` on Dawn, and for running a PyTorch Lightning toy example.  Basic information is given on changing strategies and devices used, and on running other PyTorch Lightning applications on Dawn.
+Instructions are given below for user installation of `lightning_xpu` on Dawn, and for running a PyTorch Lightning toy example.  Basic information is given on changing the strategies and devices used, and on running other PyTorch Lightning applications on Dawn.
 
 ## Installation on Dawn
 
@@ -47,15 +47,15 @@ ssh <username>@login-dawn.hpc.cam.ac.uk
     ```
     cd lightning-xpu/install
     ```
-- Submit a batch job to perform the installation, using the script [install_lightning_2.7.sh](install/install_lightning_2.7.sh):
+- Edit the script [lightning_install_2.7.sh](install/lightning_install_2.7.sh) to set the project account, then submit to the batch system:
     ```
-    sbatch install_lightning_2.7.sh
+    sbatch lightning_install_2.7.sh
      ```
-     This installs PyTorch Lightning based on [PyTorch 2.7](https://pytorch.org/blog/pytorch-2-7/).  The job writes to a log file `install2.7.log`, and creates a script `lightning-setup-2.7.sh` that can subsequently be sourced to perform environment setup.  The installation job should take about 30 minutes to complete.  If it's successful, the log file will end with information about the time taken for the installation.
+     This installs PyTorch Lightning based on [PyTorch 2.7](https://pytorch.org/blog/pytorch-2-7/).  The job writes to a log file `install2.7.log`, and creates a script `lightning-setup-2.7.sh` that can subsequently be sourced to perform environment setup.  The installation job should take about 30 minutes to complete.  If it's successful, the log file will end with information about the time taken.
 
 ## Running PyTorch Lightning toy example on Dawn
 
-Continuing after installation of the software for XPU-enabled PyTorch Lightning, the [PyTorch Lightning toy example](https://github.com/Lightning-AI/pytorch-lightning?tab=readme-ov-file#pytorch-lightning-example) can be run on Dawn as follows:
+Starting from the `install` directory, the [PyTorch Lightning toy example](https://github.com/Lightning-AI/pytorch-lightning?tab=readme-ov-file#pytorch-lightning-example) can be run on Dawn as follows:
 
 - Within the cloned repository, go to the `examples` directory:
 	```
@@ -67,18 +67,15 @@ Continuing after installation of the software for XPU-enabled PyTorch Lightning,
 	```
 	and with the number of training epochs set to 1.
 - The toy example can be run on the batch system, or may be run interactively from a Dawn compute node.
-	- To run  on the batch system, edit the script [run_toy_example.sh](examples/run_toy_example.sh) to set own project, then use:
+	- To run  on the batch system, edit the script [run_toy_example.sh](examples/run_toy_example.sh) to set the project account, then use:
 		```
 		sbatch run_toy_example.sh
 		```
 		By default, the job writes to `toy2.7.log`
 	- To run interactively, first obtain an allocation of, for example, two compute nodes:
 		```
-		# Substitute own project for <project>.
-		```
-		```
-		sintr -t 01:00:00 -N 2 --gres=gpu:4 -A <project> -p pvc9
-		./run_toy_example.sh
+		# Substitute own project account for <project>.
+		sintr -t 01:00:00 -N 2 --gres=gpu:4 -A <project> -p pvc9 ./run_toy_example.sh
 		```
 	In both cases, the application will make use of all visible (or exposed) devices on the number of nodes requested.  By default, the visible devices are the GPU stacks (or tiles), and there are two of these per GPU card on Dawn.
 	
