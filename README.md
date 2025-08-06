@@ -80,7 +80,7 @@ Starting from the `install` directory, the [PyTorch Lightning toy example](https
 		```
 	In both cases, the application will make use of all visible (or exposed) devices on the number of nodes requested.  By default, the visible devices are the GPU stacks (or tiles), and there are two of these per GPU card on Dawn.
 	
-	Note that, on each node, each initial import of the modules on which the application depends can be quite slow; subsequent imports, until disconnect from the node, are faster.  A number of warnings from the Intel extensions to PyTorch are printed during initialisation, and are repeated for each visible device.  If the application runs successfully, the final output will indicate that training has completed for the requested number of epochs (one), and will give information both on the start-to-finish time (including the time for the initial imports), and the application run time.  The single-epoch training with the toy example is intended only as a check that the software is working.
+	Note that, on each node, each initial import of the modules on which the application depends can be quite slow; subsequent imports, until disconnect from the node, are faster.  A number of warnings from the Intel extensions to PyTorch are printed during initialisation, and are repeated for each visible device.  If the application runs successfully, the final output will indicate that training has completed for the requested number of epochs (one), and will give information both on the start-to-finish time (including the time for the initial imports), and the application run time.  The single-epoch training with the toy example is intended only as a check that the software runs.
 
 ## Changing strategy
 
@@ -92,11 +92,14 @@ to:
 ```
 trainer = L.Trainer(max_epochs=1, strategy="fsdp")
 ```
-For the small model of  [toy_example.py](examples/toy_example.py), note that the `"fsdp"` strategy isn't particularly useful, and is slower than `"ddp"`.
+For models that easily fit on a single visible device, as is the case for the small model of  [toy_example.py](examples/toy_example.py), meaning that 
+`"ddp"` and `"fsdp"` can both be used, the former tends to be faster.  For
+models that won't fit on a single visible device, `"fsdp"` becomes the only
+option.
 
 ## Changing numbers of nodes and GPU cards used
 
-To change the numbers of nodes and GPU cards used by a PyTorch Lightning application, the recommended approach is to modify the Slurm request for number of nodes, and/or the number of GPU cards per node.  In [run_toy_example.sh](examples/run_toy_example.sh), for example, it's possible to change to a single node, and two GPU cards, by using the directives:
+To change the numbers of nodes and GPU cards used by a PyTorch Lightning application, the recommended approach for Dawn is to modify the Slurm request for number of nodes, and/or the number of GPU cards per node.  In [run_toy_example.sh](examples/run_toy_example.sh), for example, it's possible to change to a single node, and two GPU cards, by using the directives:
 ```
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
@@ -104,9 +107,10 @@ To change the numbers of nodes and GPU cards used by a PyTorch Lightning applica
 
 ## Defining device visibility
 
-Device visibility can be defined prior to running a PyTorch Lightning application using the environment variable `ZE_FLAT_DEVICE_HIERARCHY`.
+Prior to running a PyTorch Lightning application, device visibility can be
+defined using the environment variable `ZE_FLAT_DEVICE_HIERARCHY`.
 
-The two GPU stacks of each Dawn GPU card are made visible by not setting the environment variable (default), of with:
+The two GPU stacks of each Dawn GPU card are made visible by not setting the environment variable (default), or with:
 ```
 export ZE_FLAT_DEVICE_HIERARCY="FLAT"
 ```
@@ -116,7 +120,7 @@ A Dawn GPU card is made visible with:
 ```
 export ZE_FLAT_DEVICE_HIERARCY="COMPOSITE"
 ```
-This maximises the memory of each visible device, setting it to the GPU card RAM of 128 GiB, and may be a better choice for a model that is too large to fit on a single GPU stack.
+This maximises the memory of each visible device, on Dawn setting it to the GPU card RAM of 128 GiB, and may be a better choice for a model that is too large to fit on a single GPU stack.
 
 For more information about FLAT and COMPOSITE modes, see:
 - [Exposing the device herarchy](https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2024-1/exposing-device-hierarchy.html);
@@ -137,4 +141,3 @@ To run a PyTorch Lightning application on Dawn, the basic requirements are:
 	# The user may move this script from its original location.
 	source <path_to_setup_script>
 	```
-
