@@ -15,14 +15,15 @@
 # where ${PYTORCH_VERSION} identifies the underlying PyTorch version.
 #
 # If PYTORCH_VERSION isn't defined explicitly, an attempt will be made
-# to extract it from SLURM_JOB_NAME.
+# to extract it from SLURM_JOB_NAME.  If this fails, the value
+# of ${DEFAULT_PYTORCH_VERSION}, defined in this script is used.
 #
 # This script can be run interactively:
-#     ./run_toy_example.sh
-#     export SLURM_JOB_NAME=toy2.7; ./run_toy_example.sh # use PyTorch 2.7
+#     ./run_toy_example.sh # use default PyTorch version
+#     export SLURM_JOB_NAME=toy2.3; ./run_toy_example.sh # use PyTorch 2.3
 # or can be submitted to a Slurm batch system.
-#     sbatch run_toy_example.sh
-#     sbatch --job-name=toy2.7 run_toy_example.sh # use PyTorch 2.7
+#     sbatch run_toy_example.sh # use default PyTorch version
+#     sbatch --job-name=toy2.3 run_toy_example.sh # use PyTorch 2.3
 
 T1=${SECONDS}
 echo "Job start on $(hostname): $(date)"
@@ -30,12 +31,11 @@ echo "Job start on $(hostname): $(date)"
 # Exit at first failure.
 set -e
 
+# Define default PyTorch version.
+DEFAULT_PYTORCH_VERSION=2.7
+
 # Ensure that Slurm environment variables are set,
 # also if running outside of Slurm environment.
-if [[ -z "${SLURM_JOB_NAME}" ]]; then
-    SLURM_JOB_NAME="toy2.3"
-fi
-
 if [[ -z "${SLURM_NNODES}" ]]; then
     SLURM_NNODES=1
 fi
@@ -47,9 +47,13 @@ else
 fi
 
 # If PYTORCH_VERSION not defined explicitly,
-# try extracting from the Slurm job name.
+# try extracting from the Slurm job name, or otherwise set default.
 if [[ -z "${PYTORCH_VERSION}" ]]; then
-    PYTORCH_VERSION=$(echo "${SLURM_JOB_NAME}" | grep -Eo "[0-9]+(\.[0-9]+)?")
+    if [ 0 -eq  $(echo "${SLURM_JOB_NAME}" | grep -Eoc "[0-9]+(\.[0-9]+)?") ]; then
+        PYTORCH_VERSION=${DEFAULT_PYTORCH_VERSION}
+    else
+        PYTORCH_VERSION=$(echo "${SLURM_JOB_NAME}" | grep -Eo "[0-9]+(\.[0-9]+)?")
+    fi
 fi
 echo ""
 source ../install/lightning-setup-${PYTORCH_VERSION}.sh
