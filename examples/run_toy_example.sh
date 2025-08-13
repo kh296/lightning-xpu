@@ -24,9 +24,9 @@
 # or can be submitted to a Slurm batch system.
 #     sbatch run_toy_example.sh # use default PyTorch version
 #     sbatch --job-name=toy2.3 run_toy_example.sh # use PyTorch 2.3
-
 T1=${SECONDS}
 echo "Job start on $(hostname): $(date)"
+echo "SLURM_JOB_NAME=${SLURM_JOB_NAME}"
 
 # Exit at first failure.
 set -e
@@ -45,18 +45,42 @@ if [[ -z "${SLURM_GPUS_ON_NODE}" ]]; then
 else
     SLURM_NTASKS_PER_NODE=$((2*${SLURM_GPUS_ON_NODE}))
 fi
+SLURM_NTASKS=$((${SLURM_NNODES}*${SLURM_NTASKS_PER_NODE}))
 
-# If PYTORCH_VERSION not defined explicitly,
-# try extracting from the Slurm job name, or otherwise set default.
+# Unset and set Slurm variables for compatibility with srun.
+unset SLURM_MEM_PER_CPU
+unset SLURM_MEM_PER_NODE
+SLURM_EXPORT_ENV=ALL
+
+# Set PyTorch version.
+SETUP_SCRIPT_PREFIX="../install/lightning-setup-"
+SETUP_SCRIPT_SUFFIX=".sh"
 if [[ -z "${PYTORCH_VERSION}" ]]; then
-    if [ 0 -eq  $(echo "${SLURM_JOB_NAME}" | grep -Eoc "[0-9]+(\.[0-9]+)?") ]; then
-        PYTORCH_VERSION=${DEFAULT_PYTORCH_VERSION}
-    else
-        PYTORCH_VERSION=$(echo "${SLURM_JOB_NAME}" | grep -Eo "[0-9]+(\.[0-9]+)?")
+    PYTORCH_VERSION=${DEFAULT_PYTORCH_VERSION}
+    PYTORCH_VERSION_SOURCE="\${DEFAULT_PYTORCH_VERSION}"
+    if [ 0 -ne  $(echo "${SLURM_JOB_NAME}" | grep -Eoc "[0-9]+(\.[0-9]+)?") ]; then
+        VERSION=$(echo "${SLURM_JOB_NAME}" | grep -Eo "[0-9]+(\.[0-9]+)?")
+        if [ -f "${SETUP_SCRIPT_PREFIX}${VERSION}${SETUP_SCRIPT_SUFFIX}" ]; then
+            PYTORCH_VERSION=${VERSION}
+            PYTORCH_VERSION_SOURCE="\${SLURM_JOB_NAME}"
+	fi
     fi
+else
+    PYTORCH_VERSION_SOURCE="\${PYTORCH_VERSION}"
 fi
 echo ""
-source ../install/lightning-setup-${PYTORCH_VERSION}.sh
+echo "From ${PYTORCH_VERSION_SOURCE}, using PyTorch version: ${PYTORCH_VERSION}"
+
+# Perform environment setup.
+SETUP_SCRIPT="${SETUP_SCRIPT_PREFIX}${PYTORCH_VERSION}${SETUP_SCRIPT_SUFFIX}"
+if ! [ -f ${SETUP_SCRIPT} ]; then
+    echo "Setup script for Python version ${PYTHON_VERSION} not found:"
+    echo "    ${SETUP_SCRIPT}"
+    exit
+fi
+SETUP="source ${SETUP_SCRIPT}"
+echo ${SETUP}
+${SETUP}
 echo ""
 
 # Define command to run depending on availability of srun.
@@ -64,7 +88,7 @@ APP="toy_example.py"
 if command -v srun 1>/dev/null 2>&1
 then
     echo "Nodes used:"
-    srun hostname
+    srun --nodes=${SLURM_NNODES} --ntasks-per-node=1 hostname
     echo ""
     echo "Performing initial import of lightning_xpu on each node"
     T2=${SECONDS}
