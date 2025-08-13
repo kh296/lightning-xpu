@@ -71,7 +71,7 @@ EOF
 conda env remove -n ${ENV_NAME} -y
 conda env create -f ${ENV_NAME}.yml
 CMD="conda activate ${ENV_NAME}"
-echo ${CMD} >> lightning-setup-2.7.sh
+echo ${CMD} >> lightning-setup-2.8.sh
 
 echo "Lightning installation completed: $(date)"
 echo "Installation time: $((${SECONDS}-${T0})) seconds"
