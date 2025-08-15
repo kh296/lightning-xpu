@@ -28,7 +28,6 @@ cat <<EOF >lightning-setup-2.8.sh
 
 module purge
 module load rhel9/default-dawn
-module load intel-oneapi-ccl/2021.15.0
 
 # Initialise conda.
 source ~/miniforge3/bin/activate
@@ -54,17 +53,12 @@ dependencies:
   - pip:
     - --index-url https://download.pytorch.org/whl/xpu
     - --extra-index-url https://pypi.org/simple
-    - --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/
     - deepspeed
     - lightning[extra]
     - litmodels
-    - mpi4py
-    - py-cpuinfo
     - torch==2.8.0
     - torchaudio==2.8.0
     - torchvision==0.23.0
-    - intel-extension-for-pytorch==2.8.10+xpu
-    - oneccl_bind_pt==2.8.0+xpu
     - -e ..
 EOF
 
