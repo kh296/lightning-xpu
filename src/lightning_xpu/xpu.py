@@ -29,25 +29,28 @@ to include handling of XPUs:
 
 - methods substituted for class lightning.pytorch.strategies.ddp.DDPStrategy:
   - _get_process_group_backend():
-    modified to set "ccl" as process-group backend for "xpu" device;
+    modified to set "xccl" (first choice) or "ccl" as process-group backend
+    for "xpu" device;
   - _setup_model(): modified to handle "xpu" device;
   - _setup_distributed():
     modified to set default values for selected environment variables
-    relevant to "ccl" distributed processing.
+    relevant to "xccl" and "ccl" distributed processing.
 
 - methods substituted for class lightning.pytorch.strategies.fsdp.FSDPStrategy:
   - barrier():
-    modified to allow "ccl" as backend for distributed processing;
+    modified to allow "xccl" and "ccl" as backend for distributed processing;
   - setup_environment():
-    modified to set "xpu" as device type for "ccl" as process-group backend;
+    modified to set "xpu" as device type for "xccl" or "ccl" as
+    process-group backend;
   - _get_process_group_backend():
-    modified to set "ccl" as process-group backend for "xpu" device (same as
+    modified to set "xccl" (first choice) or "ccl" as process-group backend
+    for "xpu" device (same as
     lightning.pytorch.strategies.ddp.DDPStrategy._get_process_group_backend()).
 
 - method substituted for class lightning.pytorch.strategies.model_parallel.ModelParallelStrategy:
   - barrier():
-    modified to allow "ccl" as backend for distributed processing (same as
-    lightning.pytorch.strategies.fsdp.FSDPStrategy.barrier()):
+    modified to allow "xccl" and "ccl" as backend for distributed processing
+    (same as lightning.pytorch.strategies.fsdp.FSDPStrategy.barrier()):
 
 The class XPUAccelerator has been adapted from the class:
 - lightning.pytorch.accelerators.cuda.CUDAAccelerator
@@ -70,10 +73,14 @@ try:
 except ModuleNotFoundError:
     pass
 
-try:
-    import oneccl_bindings_for_pytorch
-except ModuleNotFoundError:
-    pass
+# PyTorch XCCL backend enabled with Intel Extension for PyTorch v2.8.10+xpu.
+if not hasattr(torch.distributed, "is_xccl_available"):
+    torch.distributed.is_xccl_available = lambda: False
+if not torch.distributed.is_xccl_available():
+    try:
+        import oneccl_bindings_for_pytorch
+    except ModuleNotFoundError:
+        pass
 
 from torch.nn import Module
 from torch.nn.parallel.distributed import DistributedDataParallel
@@ -453,7 +460,8 @@ _AcceleratorConnector._check_strategy_and_fallback = _xpu_check_strategy_and_fal
 def _xpu_get_default_process_group_backend_for_device(
         device: torch.device) -> str:
     if device.type == "cuda": return "nccl"
-    if device.type == "xpu": return "ccl"
+    if device.type == "xpu": return (
+            "xccl" if torch.distributed.is_xccl_available() else "ccl")
     return "gloo"
 
 
@@ -488,7 +496,7 @@ def _xpu_setup_distributed(self) -> None:
     self._process_group_backend = self._get_process_group_backend()
     assert self.cluster_environment is not None
     _init_dist_connection(self.cluster_environment, self._process_group_backend, timeout=self._timeout)
-    if "ccl" == self._process_group_backend:
+    if self._process_group_backend in ["xccl", "ccl"]:
         os.environ.setdefault("CCL_WORKER_OFFLOAD", "0")
         # https://www.intel.com/content/www/us/en/docs/oneccl/developer-guide-reference/2021-9/environment-variables.html
         os.environ.setdefault("CCL_ATL_TRANSPORT", "ofi")
@@ -508,7 +516,7 @@ DDPStrategy.setup_distributed = _xpu_setup_distributed
 def _xpu_barrier(self, name: Optional[str] = None) -> None:
     if not _distributed_is_initialized():
         return
-    if torch.distributed.get_backend() in ["nccl", "ccl"]:
+    if torch.distributed.get_backend() in ["nccl", "xccl", "ccl"]:
         torch.distributed.barrier(device_ids=self._determine_device_ids())
     else:
         torch.distributed.barrier()
@@ -532,7 +540,8 @@ def _xpu_fsdp_setup_environment(self) -> None:
     if isinstance(self.kwargs.get("device_mesh"), tuple):
         from torch.distributed.device_mesh import init_device_mesh
 
-        device_type = "xpu" if "ccl" == self._process_group_backend else "cuda"
+        device_type = ("xpu" if self._process_group_backend in ["xccl", "ccl"]
+                       else "cuda")
         self.kwargs["device_mesh"] = init_device_mesh(device_type, self.kwargs["device_mesh"])
 
 FSDPStrategy.setup_environment = _xpu_fsdp_setup_environment
