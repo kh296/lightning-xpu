@@ -501,7 +501,7 @@ def _xpu_setup_distributed(self) -> None:
         # https://www.intel.com/content/www/us/en/docs/oneccl/developer-guide-reference/2021-9/environment-variables.html
         os.environ.setdefault("CCL_ATL_TRANSPORT", "ofi")
         # https://uxlfoundation.github.io/oneCCL/env-variables.html
-        os.environ.setdefault("CCL_ZE_IPC_EXCHANGE", "sockets")
+        os.environ.setdefault("CCL_ZE_IPC_EXCHANGE", "pidfd")
         # https://www.intel.com/content/www/us/en/developer/articles/technical/flattening-gpu-tile-hierarchy.html
         os.environ.setdefault("ZE_FLAT_DEVICE_HIERARCHY", "FLAT")
         mask = ",".join(str(idx) for idx in _get_all_visible_xpu_devices())
