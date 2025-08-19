@@ -22,7 +22,8 @@ T0=${SECONDS}
 echo "Lightning installation started: $(date)"
 
 # Create script for environment setup.
-cat <<EOF >lightning-setup-2.7.sh
+VERSION="2.7"
+cat <<EOF >lightning-setup-${VERSION}.sh
 # Setup script for enabling lightning on Dawn supercomputer
 # Generated: $(date)
 
@@ -37,10 +38,10 @@ source ~/miniforge3/bin/activate
 EOF
 
 # Define installation environment.
-source lightning-setup-2.7.sh
+source lightning-setup-${VERSION}.sh
 
 # Create and activate conda environment.
-ENV_NAME="lightning"
+ENV_NAME="lightning-${VERSION}"
 cat <<EOF >${ENV_NAME}.yml
 name: ${ENV_NAME}
 channels:
@@ -72,7 +73,7 @@ EOF
 conda env remove -n ${ENV_NAME} -y
 conda env create -f ${ENV_NAME}.yml
 CMD="conda activate ${ENV_NAME}"
-echo ${CMD} >> lightning-setup-2.7.sh
+echo ${CMD} >> lightning-setup-${VERSION}.sh
 
 echo "Lightning installation completed: $(date)"
 echo "Installation time: $((${SECONDS}-${T0})) seconds"

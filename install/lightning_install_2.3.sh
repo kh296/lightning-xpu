@@ -18,7 +18,8 @@ T0=${SECONDS}
 echo "Lightning installation started: $(date)"
 
 # Create script for environment setup.
-cat <<EOF >lightning-setup-2.3.sh
+VERSION="2.3"
+cat <<EOF >lightning-setup-${VERSION}.sh
 # Setup script for enabling lightning on Dawn supercomputer
 # Generated: $(date)
 
@@ -28,16 +29,16 @@ module load intel-oneapi-ccl/2021.15.0
 EOF
 
 # Define installation environment.
-source lightning-setup-2.3.sh
+source lightning-setup-${VERSION}.sh
 module load intelpython-conda/2025.0
 conda activate pytorch-gpu-2.3.1
 
 # Create virtual environment, add its activation to setup script,
 # and install packages needed in addition to the system PyTorch.
-rm -rf lightning-venv
-python -m venv --system-site-packages lightning-venv
-CMD="source $(pwd)/lightning-venv/bin/activate"
-echo ${CMD} >> lightning-setup-2.3.sh
+rm -rf lightning-${VERSION}-venv
+python -m venv --system-site-packages lightning-${VERSION}-venv
+CMD="source $(pwd)/lightning-${VERSION}-venv/bin/activate"
+echo ${CMD} >> lightning-setup-${VERSION}.sh
 ${CMD}
 pip install --upgrade pip
 pip install py-cpuinfo
