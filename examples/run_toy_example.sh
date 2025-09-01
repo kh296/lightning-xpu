@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=toy2.7      # job output file
+#SBATCH --job-name=toy2.8      # job output file
 #SBATCH --output=%x.log        # job output file
 #SBATCH --partition=pvc9       # cluster partition to be used
 #SBATCH --account=support-gpu  # slurm project account
@@ -32,10 +32,14 @@ echo "SLURM_JOB_NAME=${SLURM_JOB_NAME}"
 set -e
 
 # Define default PyTorch version.
-DEFAULT_PYTORCH_VERSION=2.7
+DEFAULT_PYTORCH_VERSION=2.8
 
 # Ensure that Slurm environment variables are set,
 # also if running outside of Slurm environment.
+if [[ -z "${SLURM_JOB_NAME}" || "_interactive" == "${SLURM_JOB_NAME}" ]]; then
+    SLURM_JOB_NAME="toy${DEFAULT_PYTORCH_VERSION}"
+fi
+
 if [[ -z "${SLURM_NNODES}" ]]; then
     SLURM_NNODES=1
 fi
