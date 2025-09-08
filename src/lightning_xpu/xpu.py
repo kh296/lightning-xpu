@@ -214,6 +214,8 @@ class XPUAccelerator(Accelerator):
     @staticmethod
     def get_parallel_devices(devices: Any) -> Any:
         """Gets parallel devices for the Accelerator."""
+        if isinstance(devices, int):
+          devices = range(devices)
         return [torch.device("xpu", idx) for idx in devices]
 
     @override
