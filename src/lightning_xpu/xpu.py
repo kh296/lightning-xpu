@@ -160,7 +160,7 @@ class XPUAccelerator(Accelerator):
 
     @override
     def teardown(self) -> None:
-        pass
+        torch.xpu.empty_cache()
 
     # Parsing code largely adapted from:
     # lightning.pytorch.utilities.device_parser._parse_gpu_ids(),
@@ -569,3 +569,5 @@ def _xpu_deepspeed_setup_environment(self) -> None:
     super(type(self), self).setup_environment()
 
 DeepSpeedStrategy.setup_environment = _xpu_deepspeed_setup_environment
+
+DeepSpeedStrategy._get_process_group_backend = _xpu_get_process_group_backend
