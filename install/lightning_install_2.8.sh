@@ -2,7 +2,6 @@
 #SBATCH --job-name=light2.8     # create a short name for your job
 #SBATCH --output=install2.8.log # job output file
 #SBATCH --partition=pvc9        # cluster partition to be used
-#SBATCH --account=support-gpu   # slurm project account
 #SBATCH --nodes=1               # number of nodes
 #SBATCH --gres=gpu:1            # number of allocated gpus per node
 #SBATCH --time=01:00:00         # total run time limit (HH:MM:SS)

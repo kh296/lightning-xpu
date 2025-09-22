@@ -47,11 +47,12 @@ ssh <username>@login-dawn.hpc.cam.ac.uk
     ```
     cd lightning-xpu/install
     ```
-- Edit the script [lightning_install_2.7.sh](install/lightning_install_2.7.sh) to set the project account, then submit to the batch system:
+- Submit the script [lightning_install_2.8.sh](install/lightning_install_2.8.sh) to the batch system:
     ```
-    sbatch lightning_install_2.7.sh
+    # Substitute own project account for <project>.
+    sbatch --account=<project> lightning_install_2.8.sh
      ```
-     This installs PyTorch Lightning based on [PyTorch 2.7](https://pytorch.org/blog/pytorch-2-7/).  The job writes to a log file `install2.7.log`, and creates a script `lightning-setup-2.7.sh` that can subsequently be sourced to perform environment setup.  The installation job should take about 30 minutes to complete.  If it's successful, the log file will end with information about the time taken.
+     This installs PyTorch Lightning based on [PyTorch 2.8](https://pytorch.org/blog/pytorch-2-8/).  The job writes to a log file `install2.8.log`, and creates a script `lightning-setup-2.8.sh` that can subsequently be sourced to perform environment setup.  The installation job should take about 30 minutes to complete.  If it's successful, the log file will end with information about the time taken.
 
 ## Running PyTorch Lightning toy example on Dawn
 
@@ -67,20 +68,25 @@ Starting from the `install` directory, the [PyTorch Lightning toy example](https
 	```
 	and with the number of training epochs set to 1.
 - The toy example can be run on the batch system, or may be run interactively from a Dawn compute node.
-	- To run  on the batch system, edit the script [run_toy_example.sh](examples/run_toy_example.sh) to set the project account, then use:
-		```
-		sbatch run_toy_example.sh
-		```
-		By default, the job writes to `toy2.7.log`
-	- To run interactively, first obtain an allocation of, for example, two compute nodes, then start the script:
+	- To run  on the batch system, use:
 		```
 		# Substitute own project account for <project>.
+		sbatch -A <project> run_toy_example.sh
+		```
+		By default, the job writes to `toy2.8.log`
+	- To run interactively, first obtain an allocation of, for example, two compute nodes, then start the script:
+		```
+        # Run from login node.
+		# Substitute own project account for <project>.
 		sintr -t 01:00:00 -N 2 --gres=gpu:4 -A <project> -p pvc9
+
+        # Run once connected to compute node.
         ./run_toy_example.sh
 		```
 	In both cases, the application will make use of all visible (or exposed) devices on the number of nodes requested.  By default, the visible devices are the GPU stacks (or tiles), and there are two of these per GPU card on Dawn.
 	
-	Note that, on each node, each initial import of the modules on which the application depends can be quite slow; subsequent imports, until disconnect from the node, are faster.  A number of warnings from the Intel extensions to PyTorch are printed during initialisation, and are repeated for each visible device.  If the application runs successfully, the final output will indicate that training has completed for the requested number of epochs (one), and will give information both on the start-to-finish time (including the time for the initial imports), and the application run time.  The single-epoch training with the toy example is intended only as a check that the software runs.
+	Note that, on each node, each initial import of the modules on which the application depends can be quite slow; subsequent imports, until disconnect from the node, are faster.  If the application runs successfully, the final output will indicate that training has completed for the requested number of epochs (one), and will give information both on the start-to-finish time (including the time for the initial imports), and the application run time.  The single-epoch training with the toy example is intended only as a check that the software runs, and
+makes use of the visible devices.
 
 ## Changing strategy
 
@@ -137,7 +143,7 @@ To run a PyTorch Lightning application on Dawn, the basic requirements are:
 - The environment setup for running the application should be performed with:
 	```
 	# Substitute for <path_to_setup_script>
-	# the path to the script lighting-setup-2.7.sh created during installation.
+	# the path to the script lighting-setup-2.8.sh created during installation.
 	# The user may move this script from its original location.
 	source <path_to_setup_script>
 	```
