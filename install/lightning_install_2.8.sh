@@ -53,7 +53,6 @@ dependencies:
   - pip:
     - --index-url https://download.pytorch.org/whl/xpu
     - --extra-index-url https://pypi.org/simple
-    - deepspeed
     - lightning[extra]
     - litmodels
     - torch==2.8.0
