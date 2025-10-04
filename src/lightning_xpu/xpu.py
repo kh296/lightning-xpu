@@ -28,6 +28,8 @@ to include handling of XPUs:
     as strategy for "xpu" device.
 
 - methods substituted for class lightning.pytorch.strategies.ddp.DDPStrategy:
+  - barrier():
+    modified to allow "xccl" and "ccl" as backend for distributed processing;
   - _get_process_group_backend():
     modified to set "xccl" (first choice) or "ccl" as process-group backend
     for "xpu" device;
@@ -491,6 +493,7 @@ def _xpu_setup_model(self, model: Module) -> DistributedDataParallel:
 
 DDPStrategy._setup_model = _xpu_setup_model
 
+
 def _xpu_setup_distributed(self) -> None:
     ddp_log.debug(f"{self.__class__.__name__}: setting up distributed...")
     reset_seed()
@@ -511,11 +514,22 @@ def _xpu_setup_distributed(self) -> None:
 
 DDPStrategy.setup_distributed = _xpu_setup_distributed
 
+
+def _xpu_ddp_barrier(self, name: Optional[str] = None) -> None:
+    if not _distributed_is_initialized():
+        return
+    print("Hello", torch.distributed.get_backend(), self.determine_ddp_device_ids(), flush=True)
+    if torch.distributed.get_backend() in ["nccl", "xccl", "ccl"]:
+        torch.distributed.barrier(device_ids=self.determine_ddp_device_ids())
+    else:
+        torch.distributed.barrier()
+
+DDPStrategy.barrier = _xpu_ddp_barrier
+
 #
 # Modifications to lightning.pytorch.strategies.FSDPStrategy
 #
-
-def _xpu_barrier(self, name: Optional[str] = None) -> None:
+def _xpu_fsdp_barrier(self, name: Optional[str] = None) -> None:
     if not _distributed_is_initialized():
         return
     if torch.distributed.get_backend() in ["nccl", "xccl", "ccl"]:
@@ -523,7 +537,7 @@ def _xpu_barrier(self, name: Optional[str] = None) -> None:
     else:
         torch.distributed.barrier()
 
-FSDPStrategy.barrier = _xpu_barrier
+FSDPStrategy.barrier = _xpu_fsdp_barrier
 
 
 def _xpu_fsdp_setup_environment(self) -> None:
@@ -548,7 +562,7 @@ def _xpu_fsdp_setup_environment(self) -> None:
 
 FSDPStrategy.setup_environment = _xpu_fsdp_setup_environment
 
-# Function _xpu_get_prcess_group_backend()
+# Function _xpu_get_process_group_backend()
 # defined in modifications to lightning.pytorch.strategies.DDPStrategy
 FSDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
 
@@ -556,9 +570,9 @@ FSDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
 # Modifications to lightning.pytorch.strategies.ModelParallelStrategy
 #
 
-# Function _xpu_barrier()
-# defined in modifications to lightning.pytorch.strategies.FSDPStrategy
-ModelParallelStrategy.barrier = _xpu_barrier
+# Function _xpu_fdsp_barrier()
+# defined in modifications to lightning.pytorch.strategies.FDSPStrategy
+ModelParallelStrategy.barrier = _xpu_fsdp_barrier
 
 #
 # Modifications to lightning.pytorch.strategies.DeepSpeedStrategy
