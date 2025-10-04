@@ -9,7 +9,7 @@ def test_import():
     assert lightning_xpu_imported == True
 
 import torch.xpu
-from lightning_xpu import XPUAccelerator
+from lightning_xpu.lightning.pytorch.accelerators.xpu import XPUAccelerator
 device = XPUAccelerator()
 
 def test_xpu_available():
