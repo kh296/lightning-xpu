@@ -5,16 +5,15 @@ On import, this module substitutes modified versions of some of the
 methods of the class
 lightning.pytorch.strategies.fsdp.FSDPStrategy:
 of PyTorch Lightning, to include handling of XPUs:
-- methods substituted for class lightning.pytorch.strategies.fsdp.FSDPStrategy:
-  - barrier():
-    modified to allow "xccl" and "ccl" as backend for distributed processing;
-  - setup_environment():
-    modified to set "xpu" as device type for "xccl" or "ccl" as
-    process-group backend;
-  - _get_process_group_backend():
-    modified to set "xccl" (first choice) or "ccl" as process-group backend
-    for "xpu" device (same as
-    lightning.pytorch.strategies.ddp.DDPStrategy._get_process_group_backend()).
+- barrier():
+modified to allow "xccl" and "ccl" as backend for distributed processing;
+- setup_environment():
+modified to set "xpu" as device type for "xccl" or "ccl" as
+process-group backend;
+- _get_process_group_backend():
+modified to set "xccl" (first choice) or "ccl" as process-group backend
+for "xpu" device (same as
+lightning.pytorch.strategies.ddp.DDPStrategy._get_process_group_backend()).
 
 Modified methods are based on the original methods
 in the lightning package of PyTorch Lightning.
