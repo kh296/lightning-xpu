@@ -58,8 +58,11 @@ def _xpu_setup_environment(self) -> None:
     self.set_world_ranks()
 
     self._process_group_backend = self._get_process_group_backend()
-    assert self.cluster_environment is not None
-    _init_dist_connection(self.cluster_environment, self._process_group_backend, timeout=self._timeout)
+    assert self.cluster_environment is not None 
+    kwargs: dict[str, Any] = {"timeout": self._timeout}
+    if _TORCH_GREATER_EQUAL_2_3:
+        kwargs["device_id"] = self.root_device if self.root_device.type != "cpu" else None
+    _init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
 
     # if 'device_mesh' in the `kwargs` is provided as a tuple, update it into the `DeviceMesh` object here
     if isinstance(self.kwargs.get("device_mesh"), tuple):
