@@ -25,7 +25,10 @@ import os
 from contextlib import nullcontext
 from typing import Optional
 
-from lightning_xpu.lightning.pytorch.accelerators.xpu import XPUAccelerator
+from lightning_xpu.lightning.pytorch.accelerators.xpu import (
+        XPUAccelerator,
+        _get_all_visible_xpu_devices
+        )
 
 import torch
 from torch.nn import Module
