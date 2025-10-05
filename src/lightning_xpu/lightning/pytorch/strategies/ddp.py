@@ -49,7 +49,10 @@ from lightning.pytorch.strategies.ddp import _DDP_FORK_ALIASES, log as ddp_log
 # This is a modified version of lightning.fabric.utilities.distributed._get_default_process_group_backend_for_device()
 def _xpu_get_default_process_group_backend_for_device(
         device: torch.device) -> str:
-    if device.type == "cuda": return "nccl"
+    """Return corresponding distributed backend for a given device."""
+    device_backend_map = torch.distributed.Backend.default_device_backend_map
+    if device.type in device_backend_map:
+        return device_backend_map[device.type]
     if device.type == "xpu": return (
             "xccl" if torch.distributed.is_xccl_available() else "ccl")
     return "gloo"
