@@ -47,6 +47,18 @@ class XPUAccelerator(Accelerator):
                     f"Device should be XPU, got {device} instead")
         torch.xpu.set_device(device)
 
+        # Set default values for environment variables
+        # relevant when using XPU devices in parallel processing.
+        os.environ.setdefault("CCL_WORKER_OFFLOAD", "0")
+        # https://www.intel.com/content/www/us/en/docs/oneccl/developer-guide-reference/2021-9/environment-variables.html
+        os.environ.setdefault("CCL_ATL_TRANSPORT", "ofi")
+        # https://uxlfoundation.github.io/oneCCL/env-variables.html
+        os.environ.setdefault("CCL_ZE_IPC_EXCHANGE", "pidfd")
+        # https://www.intel.com/content/www/us/en/developer/articles/technical/flattening-gpu-tile-hierarchy.html
+        os.environ.setdefault("ZE_FLAT_DEVICE_HIERARCHY", "FLAT")
+        mask = ",".join(str(idx) for idx in _get_all_visible_xpu_devices())
+        os.environ.setdefault("ZE_AFFINITY_MASK", mask)
+
     @override
     def get_device_stats(self, device: _DEVICE) -> Dict[str, Any]:
         """Gets stats for the given GPU device.

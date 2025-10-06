@@ -11,9 +11,6 @@ of PyTorch Lightning, to include handling of XPUs:
   modified to set "xccl" (first choice) or "ccl" as process-group backend
   for "xpu" device;
 - _setup_model(): modified to handle "xpu" device;
-- _setup_distributed():
-  modified to set default values for selected environment variables
-  relevant to "xccl" and "ccl" distributed processing.
 
 Modified methods are based on the original methods
 in the lightning package of PyTorch Lightning.
@@ -81,27 +78,6 @@ def _xpu_setup_model(self, model: Module) -> DistributedDataParallel:
         return DistributedDataParallel(module=model, device_ids=device_ids, **self._ddp_kwargs)
 
 DDPStrategy._setup_model = _xpu_setup_model
-
-
-def _xpu_setup_distributed(self) -> None:
-    ddp_log.debug(f"{self.__class__.__name__}: setting up distributed...")
-    reset_seed()
-    self.set_world_ranks()
-    self._process_group_backend = self._get_process_group_backend()
-    assert self.cluster_environment is not None
-    _init_dist_connection(self.cluster_environment, self._process_group_backend, timeout=self._timeout)
-    if self._process_group_backend in ["xccl", "ccl"]:
-        os.environ.setdefault("CCL_WORKER_OFFLOAD", "0")
-        # https://www.intel.com/content/www/us/en/docs/oneccl/developer-guide-reference/2021-9/environment-variables.html
-        os.environ.setdefault("CCL_ATL_TRANSPORT", "ofi")
-        # https://uxlfoundation.github.io/oneCCL/env-variables.html
-        os.environ.setdefault("CCL_ZE_IPC_EXCHANGE", "pidfd")
-        # https://www.intel.com/content/www/us/en/developer/articles/technical/flattening-gpu-tile-hierarchy.html
-        os.environ.setdefault("ZE_FLAT_DEVICE_HIERARCHY", "FLAT")
-        mask = ",".join(str(idx) for idx in _get_all_visible_xpu_devices())
-        os.environ.setdefault("ZE_AFFINITY_MASK", mask)
-
-DDPStrategy.setup_distributed = _xpu_setup_distributed
 
 
 def _xpu_barrier(self, name: Optional[str] = None) -> None:

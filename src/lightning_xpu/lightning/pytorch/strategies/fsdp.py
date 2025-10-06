@@ -31,6 +31,7 @@ from lightning.fabric.utilities.distributed import (
         _init_dist_connection,
         )
 from lightning.fabric.utilities.seed import reset_seed
+from lightning.fabric.utilities.imports import _TORCH_GREATER_EQUAL_2_3
 from lightning.pytorch.strategies import FSDPStrategy
 from lightning.pytorch.strategies.fsdp import log as fsdp_log
 
