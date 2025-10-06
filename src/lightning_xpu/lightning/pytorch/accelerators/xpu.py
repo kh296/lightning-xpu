@@ -8,6 +8,7 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 - https://www.apache.org/licenses/LICENSE-2.0.html
 """
 
+import os
 from functools import lru_cache
 from typing import Any, Dict, List, MutableSequence
 from typing_extensions import override
