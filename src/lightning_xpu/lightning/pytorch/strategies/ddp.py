@@ -12,7 +12,7 @@ of PyTorch Lightning, to include handling of XPUs:
   for "xpu" device;
 - _setup_model():
   modified to handle "xpu" device;
-- _setup_distributed():
+- setup_distributed():
   modified to call modified version of _init_dist_connection(), and so
   set environment variables used to determine local rank and
   local world size when using XPU devices and CCL backend.
@@ -93,4 +93,4 @@ def _xpu_setup_distributed(self) -> None:
         kwargs["device_id"] = self.root_device if self.root_device.type != "cpu" else None
     _xpu__init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
 
-DDPStrategy._setup_distributed = _xpu_setup_distributed
+DDPStrategy.setup_distributed = _xpu_setup_distributed
