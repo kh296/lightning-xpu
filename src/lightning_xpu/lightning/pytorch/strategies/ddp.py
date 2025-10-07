@@ -42,6 +42,7 @@ from torch.nn.parallel.distributed import DistributedDataParallel
 
 from lightning.fabric.utilities.distributed import _distributed_is_initialized
 from lightning.fabric.utilities.seed import reset_seed
+from lightning.fabric.utilities.imports import _TORCH_GREATER_EQUAL_2_3
 from lightning.pytorch.strategies import DDPStrategy
 from lightning.pytorch.strategies.ddp import _DDP_FORK_ALIASES, log
 

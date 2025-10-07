@@ -28,6 +28,8 @@ from lightning_xpu.lightning.fabric.utilities.distributed import (
         _xpu_init_dist_connection,
         )
 
+from lightning.fabric.utilities.seed import reset_seed
+from lightning.fabric.utilities.imports import _TORCH_GREATER_EQUAL_2_3
 from lightning.pytorch.strategies import ModelParallelStrategy
 
 #

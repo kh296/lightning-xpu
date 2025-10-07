@@ -35,6 +35,7 @@ from torch.nn import Module
 from torch.nn.parallel.distributed import DistributedDataParallel
 
 from lightning.fabric.utilities.distributed import _distributed_is_initialized
+from lightning.fabric.utilities.imports import _TORCH_GREATER_EQUAL_2_3
 from lightning.fabric.strategies import DDPStrategy
 
 #
