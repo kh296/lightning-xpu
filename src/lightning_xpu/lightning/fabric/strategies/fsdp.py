@@ -6,14 +6,17 @@ methods of the class
 lightning.fabric.strategies.fsdp.FSDPStrategy:
 of PyTorch Lightning, to include handling of XPUs:
 - barrier():
-modified to allow "xccl" and "ccl" as backend for distributed processing;
+  modified to allow "xccl" and "ccl" as backend for distributed processing;
 - setup_environment():
-modified to set "xpu" as device type for "xccl" or "ccl" as
-process-group backend;
+  modified to set "xpu" as device type for "xccl" or "ccl" as
+  process-group backend;
 - _get_process_group_backend():
-modified to set "xccl" (first choice) or "ccl" as process-group backend
-for "xpu" device (same as
-lightning.fabric.strategies.ddp.DDPStrategy._get_process_group_backend()).
+  modified to set "xccl" (first choice) or "ccl" as process-group backend
+  for "xpu" device.
+- _setup_distributed():
+  modified to call modified version of _init_dist_connection(), and so
+  set environment variables used to determine local rank and
+  local world size when using XPU devices and CCL backend.
 
 Modified methods are based on the original methods
 in the lightning package of PyTorch Lightning.
@@ -23,8 +26,10 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 """
 from typing import Any
 
-from lightning_xpu.lightning.pytorch.accelerators.xpu import XPUAccelerator
-from lightning_xpu.lightning.fabric.strategies.ddp import _xpu_get_process_group_backend
+from lightning_xpu.lightning.fabric.utilities.distributed import (
+        _xpu_get_process_group_backend,
+        _xpu_init_dist_connection,
+        )
 
 from lightning.fabric.utilities.distributed import _distributed_is_initialized
 from lightning.fabric.utilities.seed import reset_seed
@@ -33,6 +38,9 @@ from lightning.fabric.strategies import FSDPStrategy
 #
 # Modifications to lightning.fabric.strategies.FSDPStrategy
 #
+
+FSDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
+
 def _xpu_barrier(self, *args: Any, **kwargs: Any) -> None:
     if not _distributed_is_initialized():
         return
@@ -58,6 +66,15 @@ def _xpu_setup_environment(self) -> None:
 
 FSDPStrategy.setup_environment = _xpu_setup_environment
 
-# Function _xpu_get_process_group_backend()
-# defined in modifications to lightning.fabric.strategies.DDPStrategy
-FSDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
+
+def _xpu_setup_distributed(self) -> None:
+    reset_seed()
+    self._set_world_ranks()
+    self._process_group_backend = self._get_process_group_backend()
+    assert self.cluster_environment is not None
+    kwargs: dict[str, Any] = {"timeout": self._timeout}
+    if _TORCH_GREATER_EQUAL_2_3:
+        kwargs["device_id"] = self.root_device if self.root_device.type != "cpu" else None
+    _xpu_init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
+
+FSDPStrategy._setup_distributed = _xpu_setup_distributed

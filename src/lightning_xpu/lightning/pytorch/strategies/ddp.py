@@ -10,7 +10,12 @@ of PyTorch Lightning, to include handling of XPUs:
 - _get_process_group_backend():
   modified to set "xccl" (first choice) or "ccl" as process-group backend
   for "xpu" device;
-- _setup_model(): modified to handle "xpu" device;
+- _setup_model():
+  modified to handle "xpu" device;
+- _setup_distributed():
+  modified to call modified version of _init_dist_connection(), and so
+  set environment variables used to determine local rank and
+  local world size when using XPU devices and CCL backend.
 
 Modified methods are based on the original methods
 in the lightning package of PyTorch Lightning.
@@ -26,37 +31,23 @@ from lightning_xpu.lightning.pytorch.accelerators.xpu import (
         XPUAccelerator,
         _get_all_visible_xpu_devices
         )
+from lightning_xpu.lightning.fabric.utilities.distributed import (
+        _xpu_get_process_group_backend,
+        _xpu_init_dist_connection,
+        )
 
 import torch
 from torch.nn import Module
 from torch.nn.parallel.distributed import DistributedDataParallel
 
-from lightning.fabric.utilities.distributed import (
-        _distributed_is_initialized,
-        _init_dist_connection,
-        )
+from lightning.fabric.utilities.distributed import _distributed_is_initialized
 from lightning.fabric.utilities.seed import reset_seed
 from lightning.pytorch.strategies import DDPStrategy
-from lightning.pytorch.strategies.ddp import _DDP_FORK_ALIASES, log as ddp_log
+from lightning.pytorch.strategies.ddp import _DDP_FORK_ALIASES, log
 
 #
 # Modifications to lightning.pytorch.strategies.DDPStrategy
 #
-
-# This is a modified version of lightning.fabric.utilities.distributed._get_default_process_group_backend_for_device()
-def _xpu_get_default_process_group_backend_for_device(
-        device: torch.device) -> str:
-    """Return corresponding distributed backend for a given device."""
-    device_backend_map = torch.distributed.Backend.default_device_backend_map
-    if device.type in device_backend_map:
-        return device_backend_map[device.type]
-    if device.type == "xpu": return (
-            "xccl" if torch.distributed.is_xccl_available() else "ccl")
-    return "gloo"
-
-
-def _xpu_get_process_group_backend(self) -> str:
-            return self._process_group_backend or _xpu_get_default_process_group_backend_for_device(self.root_device)
 
 DDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
 
@@ -64,7 +55,7 @@ DDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
 def _xpu_setup_model(self, model: Module) -> DistributedDataParallel:
     """Wraps the model into a :class:`~torch.nn.parallel.distributed.DistributedDataParallel` module."""
     device_ids = self.determine_ddp_device_ids()
-    ddp_log.debug(f"setting up DDP model with device ids: {device_ids}, kwargs: {self._ddp_kwargs}")
+    log.debug(f"setting up DDP model with device ids: {device_ids}, kwargs: {self._ddp_kwargs}")
     if device_ids is None:
         ctx = nullcontext()
     else:
@@ -89,3 +80,17 @@ def _xpu_barrier(self, name: Optional[str] = None) -> None:
         torch.distributed.barrier()
 
 DDPStrategy.barrier = _xpu_barrier
+
+
+def _xpu_setup_distributed(self) -> None:
+    log.debug(f"{self.__class__.__name__}: setting up distributed...")
+    reset_seed()
+    self.set_world_ranks()
+    self._process_group_backend = self._get_process_group_backend()
+    assert self.cluster_environment is not None
+    kwargs: dict[str, Any] = {"timeout": self._timeout}
+    if _TORCH_GREATER_EQUAL_2_3:
+        kwargs["device_id"] = self.root_device if self.root_device.type != "cpu" else None
+    _xpu__init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
+
+DDPStrategy._setup_distributed = _xpu_setup_distributed
