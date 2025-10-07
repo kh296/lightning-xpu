@@ -84,18 +84,18 @@ def _xpu_init_dist_connection(
     # |CCL_WARN| could not get local_idx/count from environment variables,
     # trying to get them from ATL
     if torch_distributed_backend in ["ccl", "xccl"]:
-        local_rank = cluster_environment.local_rank()
         local_world_size = torch.xpu.device_count()
+        local_rank = cluster_environment.local_rank()
         ccl_process_launcher = os.environ.get("CCL_PROCESS_LAUNCHER", "hydra")
         if "hydra" == ccl_process_launcher:
-            os.environ["MPI_LOCALNRANKS"] = str(local_rank)
-            os.environ["MPI_LOCALRANKID"] = str(local_world_size)
+            os.environ["MPI_LOCALNRANKS"] = str(local_world_size)
+            os.environ["MPI_LOCALRANKID"] = str(local_rank)
         elif "torchrun" == ccl_process_launcher:
-            os.environ["LOCAL_WORLD_SIZE"] = str(local_rank)
-            os.environ["LOCAL_RANK"] = str(local_world_size)
+            os.environ["LOCAL_WORLD_SIZE"] = str(local_world_size)
+            os.environ["LOCAL_RANK"] = str(local_rank)
         elif "none" == ccl_process_launcher:
-            os.environ["CCL_LOCAL_SIZE"] = str(local_rank)
-            os.environ["CCL_LOCAL_RANK"] = str(local_world_size)
+            os.environ["CCL_LOCAL_SIZE"] = str(local_world_size)
+            os.environ["CCL_LOCAL_RANK"] = str(local_rank)
 
     log.info(f"Initializing distributed: GLOBAL_RANK: {global_rank}, MEMBER: {global_rank + 1}/{world_size}")
     torch.distributed.init_process_group(torch_distributed_backend, rank=global_rank, world_size=world_size, **kwargs)
