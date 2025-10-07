@@ -92,6 +92,6 @@ def _xpu_setup_distributed(self) -> None:
     kwargs: dict[str, Any] = {"timeout": self._timeout}
     if _TORCH_GREATER_EQUAL_2_3:
         kwargs["device_id"] = self.root_device if self.root_device.type != "cpu" else None
-    _xpu__init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
+    _xpu_init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
 
 DDPStrategy.setup_distributed = _xpu_setup_distributed
