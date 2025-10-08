@@ -21,6 +21,7 @@ import os
 from typing import Any, Optional
 
 import torch
+import lightning
 from lightning.fabric.utilities.distributed import log
 from lightning.fabric.utilities.rank_zero import rank_zero_info
 
@@ -112,7 +113,7 @@ def _xpu_init_dist_connection(
 
 
 # Substitute functions modified in all modules where they're used.
-for module in [
+modules = [
         lightning.fabric.strategies.ddp,
         lightning.fabric.strategies.deepspeed,
         lightning.fabric.strategies.fsdp,
@@ -122,7 +123,14 @@ for module in [
         lightning.pytorch.strategies.deepspeed,
         lightning.pytorch.strategies.fsdp,
         lightning.pytorch.strategies.model_parallel,
-        ]:
-    setattr(module, "_init_dist_connection", _xpu_init_dist_connection)
-    setattr(module, "_get_default_process_group_backend_for_device",
-            _xpu_get_default_process_group_backend_for_device)
+        ]
+
+modified_functions = {
+        "_init_dist_connection": _xpu_init_dist_connection,
+        "_get_default_process_group_backend_for_device":
+        _xpu_get_default_process_group_backend_for_device
+        }
+
+for module in modules:
+    for function_name, modified_function in modified_functions.items():
+        setattr(module, function_name, modified_function)

@@ -30,9 +30,6 @@ from lightning.fabric.strategies import DDPStrategy
 # Modified methods for lightning.fabric.strategies.DDPStrategy.
 #
 
-DDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
-
-
 def _xpu_setup_module(self, module: Module) -> DistributedDataParallel:
     """Wraps the model into a :class:`~torch.nn.parallel.distributed.DistributedDataParallel` module."""
     device_ids = self._determine_ddp_device_ids()

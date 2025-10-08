@@ -14,6 +14,8 @@ in the lightning package of PyTorch Lightning.
 PyTorch Lightning is licensed under version 2.0 of the Apache License:
 - https://www.apache.org/licenses/LICENSE-2.0.html
 """
+from typing import Any
+
 import lightning_xpu.lightning.fabric.utilities.distributed
 
 from lightning.fabric.strategies import ModelParallelStrategy
