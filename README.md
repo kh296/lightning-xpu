@@ -2,24 +2,32 @@
 
 `lightning-xpu`  is a Python package to enable use of Intel GPUs (XPUs) with [PyTorch Lightning](https://github.com/Lightning-AI/pytorch-lightning).  It is a work in progress, tested for [Intel Data Center GPU Max 1550](https://www.intel.com/content/www/us/en/products/sku/232873/intel-data-center-gpu-max-1550/specifications.html) GPUs, on the [Dawn supercomputer](https://www.hpc.cam.ac.uk/d-w-n).
 
-This package defines an `Accelerator` subclass, `XPUAccelerator` (accelerator name: `"xpu"`).  In addition, on import, it substitutes modified versions of one function, and of some of the methods of four classes:
+This package defines an `Accelerator` subclass `XPUAccelerator` (accelerator name: `"xpu"`).  In addition, on import, it substitutes modified versions of three function, and of some of the methods of four classes:
+- function: `lightning.fabric.utilities.distributed._init_dist_connection()`
+- function: `lightning.fabric.utilities.distributed.`_get_default_process_group_backend_for_device()`
 - function: `lightning.pytorch.trainer.setup._log_device_info()`
-- class: `lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector`
-	- `_check_strategy_and_fallback()`
-	- `_choose_auto_accelerator()`
-	- `_choose_gpu_accelerator_backend()`
-	-  `_choose_and_init_cluster_environment()`
-	-  `_choose_strategy()`
--  class: `lightning.pytorch.strategies.ddp.DDPStrategy`
-	- `_get_process_group_backend()`
+- class: `lightning.fabric.strategies.ddp.DDPStrategy`
+	- `barrier()`
+	- `_setup_module`
+- class: `lightning.fabric.strategies.fsdp.FSDPStrategy`
+	- `barrier()`
+	- `setup_environment()`
+- class: `lightning.fabric.strategies.model_parallel.ModelParallelStrategy`
+	- `barrier()`
+- class: `lightning.pytorch.strategies.ddp.DDPStrategy`
+	- `barrier()`
 	- `_setup_model()`
-	-  `_setup_distributed()`
 - class: `lightning.pytorch.strategies.fsdp.FSDPStrategy`
 	- `barrier()`
-	- `_get_process_group_backend()`
 	- `setup_environment()`
 - class: `lightning.pytorch.strategies.model_parallel.ModelParallelStrategy`
 	- `barrier()`
+- class: `lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector`
+	- `_check_strategy_and_fallback()`
+	- `_choose_and_init_cluster_environment()`
+	- `_choose_auto_accelerator()`
+	- `_choose_gpu_accelerator_backend()`
+	- `_choose_strategy()`
 
 The packages enables use of the `"single_device"`, `"ddp"` and `"fsdp"` strategies with `"xpu"` accelerators, while maintaining compatibility with all other accelerator-strategy combinations supported by PyTorch Lightning.
 
@@ -83,7 +91,7 @@ Starting from the `install` directory, the [PyTorch Lightning toy example](https
         # Run once connected to compute node.
         ./run_toy_example.sh
 		```
-	In both cases, the application will make use of all visible (or exposed) devices on the number of nodes requested.  By default, the visible devices are the GPU stacks (or tiles), and there are two of these per GPU card on Dawn.
+	In both cases, the application will make use of all visible devices on the number of nodes requested.  By default, the visible devices are the GPU stacks (or tiles), and there are two of these per GPU card on Dawn.
 	
 	Note that, on each node, each initial import of the modules on which the application depends can be quite slow; subsequent imports, until disconnect from the node, are faster.  If the application runs successfully, the final output will indicate that training has completed for the requested number of epochs (one), and will give information both on the start-to-finish time (including the time for the initial imports), and the application run time.  The single-epoch training with the toy example is intended only as a check that the software runs, and
 makes use of the visible devices.
@@ -105,7 +113,7 @@ option.
 
 ## Changing numbers of nodes and GPU cards used
 
-To change the numbers of nodes and GPU cards used by a PyTorch Lightning application, the recommended approach for Dawn is to modify the Slurm request for number of nodes, and/or the number of GPU cards per node.  In [run_toy_example.sh](examples/run_toy_example.sh), for example, it's possible to change to a single node, and two GPU cards, by using the directives:
+To change the numbers of nodes and GPU cards used by a PyTorch Lightning application, the recommended approach for Dawn is to modify the Slurm request for number of nodes, and/or the number of GPU cards per node.  In [run_toy_example.sh](examples/run_toy_example.sh), for example, and when running on the batch system, it's possible to change to a single node, and two GPU cards, by using the directives:
 ```
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
@@ -116,13 +124,13 @@ To change the numbers of nodes and GPU cards used by a PyTorch Lightning applica
 Prior to running a PyTorch Lightning application, device visibility can be
 defined using the environment variable `ZE_FLAT_DEVICE_HIERARCHY`.
 
-The two GPU stacks of each Dawn GPU card are made visible by not setting the environment variable (default), or with:
+The two GPU stacks of each Dawn GPU card are made visible as two independent devices by not setting the environment variable (default), or with:
 ```
 export ZE_FLAT_DEVICE_HIERARCY="FLAT"
 ```
 This maximises the number of visible devices, and will usually be the best choice for a model that fits on a single GPU stack.
 
-A Dawn GPU card is made visible with:
+A Dawn GPU card (two stacks combined) is made visible as a single device with:
 ```
 export ZE_FLAT_DEVICE_HIERARCY="COMPOSITE"
 ```
