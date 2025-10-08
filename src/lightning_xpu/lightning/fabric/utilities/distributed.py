@@ -6,8 +6,6 @@ lightning.fabric.utilities.distributed:
 of PyTorch Lightning, to include handling of XPUs:
 - _get_default_process_group_backend_for_device()
   modified version allows for both ccl and xccl as backend for XPU device;
-- _get_process_group_backend()
-  modified version allows for both ccl and xccl as backend for XPU device;
 - _init_dist_connection():
   modified version sets environment variables used to determine local rank
   # and local world size when using XPU devices and CCL backend.
@@ -28,7 +26,7 @@ from lightning.fabric.utilities.rank_zero import rank_zero_info
 
 #
 # Modifications versions of functions
-# define in lightning.fabric.utilities.distributed.
+# defined in lightning.fabric.utilities.distributed.
 #
 
 def _xpu_get_default_process_group_backend_for_device(
@@ -111,3 +109,20 @@ def _xpu_init_dist_connection(
         f"All distributed processes registered. Starting with {world_size} processes\n"
         f"{'-' * 100}\n"
     )
+
+
+# Substitute functions modified in all modules where they're used.
+for module in [
+        lightning.fabric.strategies.ddp,
+        lightning.fabric.strategies.deepspeed,
+        lightning.fabric.strategies.fsdp,
+        lightning.fabric.strategies.model_parallel,
+        lightning.fabric.utilities.distributed,
+        lightning.pytorch.strategies.ddp,
+        lightning.pytorch.strategies.deepspeed,
+        lightning.pytorch.strategies.fsdp,
+        lightning.pytorch.strategies.model_parallel,
+        ]:
+    setattr(module, "_init_dist_connection", _xpu_init_dist_connection)
+    setattr(module, "_get_default_process_group_backend_for_device",
+            _xpu_get_default_process_group_backend_for_device)

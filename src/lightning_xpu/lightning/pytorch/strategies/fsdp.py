@@ -12,9 +12,6 @@ of PyTorch Lightning, to include handling of XPUs:
   set environment variables used to determine local rank and
   local world size when using XPU devices and CCL backend;
   and to set "xpu" as device type for "xccl" or "ccl" as process-group backend;
-- _get_process_group_backend():
-  modified to set "xccl" (first choice) or "ccl" as process-group backend
-  for "xpu" device.
 
 Modified methods are based on the original methods
 in the lightning package of PyTorch Lightning.
@@ -24,11 +21,7 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 """
 from typing import Optional
 
-from lightning_xpu.lightning.pytorch.accelerators.xpu import XPUAccelerator
-from lightning_xpu.lightning.fabric.utilities.distributed import (
-        _xpu_get_process_group_backend,
-        _xpu_init_dist_connection,
-        )
+import lightning_xpu.lightning.fabric.utilities.distributed
 
 from lightning.fabric.utilities.distributed import (
         _distributed_is_initialized,
@@ -40,11 +33,8 @@ from lightning.pytorch.strategies import FSDPStrategy
 from lightning.pytorch.strategies.fsdp import log
 
 #
-# Modifications to lightning.pytorch.strategies.FSDPStrategy
+# Modified methods for lightning.pytorch.strategies.FSDPStrategy.
 #
-
-FSDPStrategy._get_process_group_backend = _xpu_get_process_group_backend
-
 
 def _xpu_barrier(self, name: Optional[str] = None) -> None:
     if not _distributed_is_initialized():
@@ -70,7 +60,7 @@ def _xpu_setup_environment(self) -> None:
     kwargs: dict[str, Any] = {"timeout": self._timeout}
     if _TORCH_GREATER_EQUAL_2_3:
         kwargs["device_id"] = self.root_device if self.root_device.type != "cpu" else None
-    _xpu_init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
+    _init_dist_connection(self.cluster_environment, self._process_group_backend, **kwargs)
 
     # if 'device_mesh' in the `kwargs` is provided as a tuple, update it into the `DeviceMesh` object here
     if isinstance(self.kwargs.get("device_mesh"), tuple):

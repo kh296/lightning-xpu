@@ -12,7 +12,11 @@ as detailed in the modules:
 - lightning_xpu.lightning.pytorch.strategies.model_parallel
 - lightning_xpu.lightning.pytorch.trainer.setup
 - lightning_xpu.lightning.pytorch.trainer.connectors.accelerator_connector
-The package organisation under lighning_xpu mirrors the organisation of
+- lightning_xpu.lightning.fabric.strategies.ddp
+- lightning_xpu.lightning.fabric.strategies.fsdp
+- lightning_xpu.lightning.fabric.strategies.model_parallel
+- lightning_xpu.lightning.fabric.utilities.distributed
+The package organisation under lightning_xpu mirrors the organisation of
 the package of PyTorch Lightning.
 
 PyTorch Lightning is licensed under version 2.0 of the Apache License:
