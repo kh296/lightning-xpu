@@ -13,7 +13,7 @@ package of PyTorch Lightning.
 PyTorch Lightning is licensed under version 2.0 of the Apache License:
 - https://www.apache.org/licenses/LICENSE-2.0.html
 """
-from lightning_xpu.lightning.pytorch.accelerators.xpu import XPUAccelerator
+from lightning_xpu.pytorch.accelerators.xpu import XPUAccelerator
 
 import lightning.pytorch as pl
 from lightning.pytorch.accelerators import (

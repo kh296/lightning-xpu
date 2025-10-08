@@ -1,0 +1,1 @@
+import lightning_xpu.pytorch.trainer.connectors.accelerator_connector

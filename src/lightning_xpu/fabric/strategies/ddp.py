@@ -22,7 +22,7 @@ import torch
 from torch.nn import Module
 from torch.nn.parallel.distributed import DistributedDataParallel
 
-import lightning_xpu.lightning.fabric.utilities.distributed
+import lightning_xpu.fabric.utilities.distributed
 from lightning.fabric.utilities.distributed import _distributed_is_initialized
 from lightning.fabric.strategies import DDPStrategy
 

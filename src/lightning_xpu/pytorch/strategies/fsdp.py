@@ -21,7 +21,7 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 """
 from typing import Optional
 
-import lightning_xpu.lightning.fabric.utilities.distributed
+import lightning_xpu.fabric.utilities.distributed
 
 from lightning.fabric.utilities.distributed import (
         _distributed_is_initialized,

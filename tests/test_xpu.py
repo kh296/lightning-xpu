@@ -9,7 +9,7 @@ def test_import():
     assert lightning_xpu_imported == True
 
 import torch.xpu
-from lightning_xpu.lightning.pytorch.accelerators.xpu import XPUAccelerator
+from lightning_xpu.pytorch.accelerators.xpu import XPUAccelerator
 device = XPUAccelerator()
 
 def test_xpu_available():
@@ -18,7 +18,7 @@ def test_xpu_available():
 
 def test_distributed_modifications():
     # Test that functions have been modified as intended.
-    from lightning_xpu.lightning.fabric.utilities.distributed import (
+    from lightning_xpu.fabric.utilities.distributed import (
             modules,
             modified_functions,
             )
