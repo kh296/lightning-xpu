@@ -41,10 +41,6 @@ def _xpu_get_default_process_group_backend_for_device(
     return "gloo"
 
 
-def _xpu_get_process_group_backend(self) -> str:
-            return self._process_group_backend or _xpu_get_default_process_group_backend_for_device(self.root_device)
-
-
 def _xpu_init_dist_connection(
     cluster_environment: "ClusterEnvironment",
     torch_distributed_backend: str,
