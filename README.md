@@ -61,7 +61,7 @@ Starting from the `install` directory, the [PyTorch Lightning toy example](https
 	- To run  on the batch system, use:
 		```
 		# Substitute own project account for <project>.
-		sbatch -A <project> run_toy_example.sh
+		sbatch --account <project> run_toy_example.sh
 		```
 		By default, the job writes to `toy2.8.log`
 	- To run interactively, first obtain an allocation of, for example, two compute nodes, then start the script:
