@@ -76,3 +76,7 @@ echo ${CMD} >> lightning-setup-${VERSION}.sh
 
 echo "Lightning installation completed: $(date)"
 echo "Installation time: $((${SECONDS}-${T0})) seconds"
+
+echo ""
+echo "Set up environment for lightning with:"
+echo "source lightning-setup-${VERSION}.sh"

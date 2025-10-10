@@ -51,7 +51,7 @@ dependencies:
   - python=3.12
   - pip
   - pip:
-    - --index-url https://download.pytorch.org/whl/xpu
+   lightning-setup-${VERSION}.sh - --index-url https://download.pytorch.org/whl/xpu
     - --extra-index-url https://pypi.org/simple
     - lightning[extra]
     - litmodels
@@ -68,3 +68,7 @@ echo ${CMD} >> lightning-setup-${VERSION}.sh
 
 echo "Lightning installation completed: $(date)"
 echo "Installation time: $((${SECONDS}-${T0})) seconds"
+
+echo ""
+echo "Set up environment for lightning with:"
+echo "source lightning-setup-${VERSION}.sh"
