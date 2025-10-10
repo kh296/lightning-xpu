@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=light2.7                # create a short name for your job
-#SBATCH --output=lightning-install-2.7.log # job output file
+#SBATCH --output=lightning_install_2.7.log # job output file
 #SBATCH --partition=pvc9                   # cluster partition to be used
 #SBATCH --nodes=1                          # number of nodes
 #SBATCH --gres=gpu:1                       # number of allocated gpus per node

@@ -42,7 +42,7 @@ ssh <username>@login-dawn.hpc.cam.ac.uk
     # Substitute own project account for <project>.
     sbatch --account=<project> lightning_install_2.8.sh
      ```
-     This installs PyTorch Lightning based on [PyTorch 2.8](https://pytorch.org/blog/pytorch-2-8/).  The job writes to a log file `lightning-install-2.8.log`, and creates a script `lightning-setup-2.8.sh` that can subsequently be sourced to perform environment setup.  The installation job should take about 30 minutes to complete.  If it's successful, the log file will end with information about the time taken.
+     This installs PyTorch Lightning based on [PyTorch 2.8](https://pytorch.org/blog/pytorch-2-8/).  The job writes to a log file `lightning_install_2.8.log`, and creates a script `lightning-setup-2.8.sh` that can subsequently be sourced to perform environment setup.  The installation job should take about 30 minutes to complete.  If it's successful, the log file will end with information about the time taken.
 
 ## Running PyTorch Lightning toy example on Dawn
 
