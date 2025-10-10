@@ -7,12 +7,12 @@ lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector
 of PyTorch Lightning, to include handling of XPUs:
 - _check_strategy_and_fallback():
   modified to allow "fsdp" as strategy with "xpu" as accelerator type;
+- _choose_and_init_cluster_environment():
+  modified to set default values for selected Slurm environment variables;
 - _choose_auto_accelerator():
   modified to allow automatic selection of "xpu" as accelerator type;
 - _choose_gpu_accelerator_backend():
   modified to allow selection of "xpu" as gpu backend;
-- _choose_and_init_cluster_environment():
-  modified to set default values for selected Slurm environment variables;
 - _choose_strategy():
   modified to allow automatic selection of "single_device" or "ddp"
   as strategy for "xpu" device.

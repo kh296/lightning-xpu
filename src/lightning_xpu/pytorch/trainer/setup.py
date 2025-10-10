@@ -1,11 +1,13 @@
 """
 Module for enabling use of Intel GPUs (XPUs) with PyTorch Lightning.
 
-On import, this module substitutes modified versions of the function
-lightning.pytorch.trainer.setup._log_device_info()
+On import, this module substitutes modified versions of one of
+the functions of the module
+lightning.pytorch.trainer.setup
 of PyTorch Lightning, to include handling of XPUs:
-- function to recognise XPUAccelerator as representing a GPU,
-  and to indicate whether available;
+- _log_device_info()
+  modified to recognise XPUAccelerator as representing a GPU,
+  and to report number of GPUs;
 
 Modified function are based on the original function in the lightning
 package of PyTorch Lightning.

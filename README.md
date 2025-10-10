@@ -1,37 +1,18 @@
 # lightning-xpu
 
-`lightning-xpu`  is a Python package to enable use of Intel GPUs (XPUs) with [PyTorch Lightning](https://github.com/Lightning-AI/pytorch-lightning).  It is a work in progress, tested for [Intel Data Center GPU Max 1550](https://www.intel.com/content/www/us/en/products/sku/232873/intel-data-center-gpu-max-1550/specifications.html) GPUs, on the [Dawn supercomputer](https://www.hpc.cam.ac.uk/d-w-n).
+`lightning-xpu`  is a Python package to enable use of Intel GPUs (XPUs) with [PyTorch Lightning](https://github.com/Lightning-AI/pytorch-lightning).  It has been tested for [Intel Data Center GPU Max 1550](https://www.intel.com/content/www/us/en/products/sku/232873/intel-data-center-gpu-max-1550/specifications.html) GPUs, on the [Dawn supercomputer](https://www.hpc.cam.ac.uk/d-w-n).
 
-This package defines an `Accelerator` subclass `XPUAccelerator` (accelerator name: `"xpu"`).  In addition, on import, it substitutes modified versions of three function, and of some of the methods of four classes:
-- function: `lightning.fabric.utilities.distributed._init_dist_connection()`
-- function: `lightning.fabric.utilities.distributed.`_get_default_process_group_backend_for_device()`
-- function: `lightning.pytorch.trainer.setup._log_device_info()`
-- class: `lightning.fabric.strategies.ddp.DDPStrategy`
-	- `barrier()`
-	- `_setup_module`
-- class: `lightning.fabric.strategies.fsdp.FSDPStrategy`
-	- `barrier()`
-	- `setup_environment()`
-- class: `lightning.fabric.strategies.model_parallel.ModelParallelStrategy`
-	- `barrier()`
-- class: `lightning.pytorch.strategies.ddp.DDPStrategy`
-	- `barrier()`
-	- `_setup_model()`
-- class: `lightning.pytorch.strategies.fsdp.FSDPStrategy`
-	- `barrier()`
-	- `setup_environment()`
-- class: `lightning.pytorch.strategies.model_parallel.ModelParallelStrategy`
-	- `barrier()`
-- class: `lightning.pytorch.trainer.connectors.accelerator_connector._AcceleratorConnector`
-	- `_check_strategy_and_fallback()`
-	- `_choose_and_init_cluster_environment()`
-	- `_choose_auto_accelerator()`
-	- `_choose_gpu_accelerator_backend()`
-	- `_choose_strategy()`
+This package defines an `Accelerator` subclass `XPUAccelerator`
+(accelerator name: `"xpu"`) and, on import, applies
+[modifications to lightning functions and methods](./docs/lightning_modifications.md).
+It enables use of the `"single_device"`, `"ddp"` and `"fsdp"` strategies with
+`"xpu"` accelerators, while maintaining compatibility with all other
+accelerator-strategy combinations supported by PyTorch Lightning.
 
-The packages enables use of the `"single_device"`, `"ddp"` and `"fsdp"` strategies with `"xpu"` accelerators, while maintaining compatibility with all other accelerator-strategy combinations supported by PyTorch Lightning.
-
-Instructions are given below for user installation of `lightning_xpu` on Dawn, and for running a PyTorch Lightning toy example.  Basic information is given on changing the strategies and devices used, and on running other PyTorch Lightning applications on Dawn.
+Instructions are given below for user installation of `lightning_xpu` on Dawn,
+and for running a PyTorch Lightning toy example.  Basic information is given
+on changing the strategies and devices used, and on running other
+PyTorch Lightning applications on Dawn.
 
 ## Installation on Dawn
 

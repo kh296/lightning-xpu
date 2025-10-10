@@ -3,15 +3,13 @@ Module enabling use of Intel GPUs (XPUs) with PyTorch Lightning.
 
 On import, this module substitutes modified versions of some of the
 methods of the class
-lightning.pytorch.strategies.fsdp.FSDPStrategy:
+lightning.pytorch.strategies.fsdp.FSDPStrategy
 of PyTorch Lightning, to include handling of XPUs:
 - barrier():
   modified to allow "xccl" and "ccl" as backend for distributed processing;
 - setup_environment():
-  modified to call modified version of _init_dist_connection(), and so
-  set environment variables used to determine local rank and
-  local world size when using XPU devices and CCL backend;
-  and to set "xpu" as device type for "xccl" or "ccl" as process-group backend;
+  modified to set "xpu" as device type for "xccl" or "ccl" as
+  process-group backend;
 
 Modified methods are based on the original methods
 in the lightning package of PyTorch Lightning.

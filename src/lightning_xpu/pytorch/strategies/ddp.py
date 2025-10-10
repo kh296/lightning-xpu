@@ -3,7 +3,7 @@ Module enabling use of Intel GPUs (XPUs) with PyTorch Lightning.
 
 On import, this module substitutes modified versions of some of the
 methods of the class
-lightning.pytorch.strategies.ddp.DDPStrategy:
+lightning.pytorch.strategies.ddp.DDPStrategy
 of PyTorch Lightning, to include handling of XPUs:
 - barrier():
   modified to allow "xccl" and "ccl" as backend for distributed processing;

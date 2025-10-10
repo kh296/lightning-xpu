@@ -5,12 +5,12 @@ This module defines modified version of some of the functions of the module
 lightning.fabric.utilities.distributed:
 of PyTorch Lightning, to include handling of XPUs:
 - _get_default_process_group_backend_for_device()
-  modified version allows for both ccl and xccl as backend for XPU device;
+  modified to allow for both "xccl" and "ccl" as backend for "xpu" device;
 - _init_dist_connection():
-  modified version sets environment variables used to determine local rank
-  # and local world size when using XPU devices and CCL backend.
+  modified to set environment variables used to determine local rank
+  and local world size when using "xpu" devices and "xccl" or "ccl" backend.
 
-Modified methods are based on the original methods
+Modified functions are based on the original functions
 in the lightning package of PyTorch Lightning.
 
 PyTorch Lightning is licensed under version 2.0 of the Apache License:

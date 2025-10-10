@@ -1,14 +1,14 @@
 """
 Module enabling use of Intel GPUs (XPUs) with PyTorch Lightning.
 
-On import, this module substitutes modified versions of some of the
+On import, this module substitutes modified versions of one of the
 methods of the class
 lightning.fabric.strategies.model_parallel.ModelParallelStrategy
 of PyTorch Lightning, to include handling of XPUs:
 - barrier():
   modified to allow "xccl" and "ccl" as backend for distributed processing.
 
-Modified methods are based on the original methods
+Modified method based on the original method
 in the lightning package of PyTorch Lightning.
 
 PyTorch Lightning is licensed under version 2.0 of the Apache License:
@@ -21,7 +21,7 @@ import lightning_xpu.fabric.utilities.distributed
 from lightning.fabric.strategies import ModelParallelStrategy
 
 #
-# Modified methods for lightning.fabric.strategies.ModelParallelStrategy.
+# Modified method for lightning.fabric.strategies.ModelParallelStrategy.
 #
 
 def _xpu_barrier(self, *args: Any, **kwargs: Any) -> None:
