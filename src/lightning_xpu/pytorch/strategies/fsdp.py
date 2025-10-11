@@ -21,6 +21,8 @@ from typing import Optional
 
 import lightning_xpu.fabric.utilities.distributed
 
+import torch
+
 from lightning.fabric.utilities.distributed import (
         _distributed_is_initialized,
         _init_dist_connection,

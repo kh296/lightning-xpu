@@ -18,6 +18,8 @@ from typing import Optional
 
 import lightning_xpu.fabric.utilities.distributed
 
+import torch
+
 from lightning.pytorch.strategies import ModelParallelStrategy
 
 #
