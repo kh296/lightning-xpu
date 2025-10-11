@@ -21,8 +21,10 @@ T0=${SECONDS}
 echo "Lightning installation started: $(date)"
 
 # Create script for environment setup.
-VERSION=2.8
-cat <<EOF >lightning-setup-${VERSION}.sh
+VERSION="2.8"
+ENV_NAME="lightning-${VERSION}"
+SETUP="lightning-setup-${VERSION}.sh"
+cat <<EOF >${SETUP}
 # Setup script for enabling lightning on Dawn supercomputer
 # Generated: $(date)
 
@@ -36,10 +38,9 @@ source ~/miniforge3/bin/activate
 EOF
 
 # Define installation environment.
-source lightning-setup-${VERSION}.sh
+source ${SETUP}
 
 # Create and activate conda environment.
-ENV_NAME="lightning-${VERSION}"
 cat <<EOF >${ENV_NAME}.yml
 name: ${ENV_NAME}
 channels:
@@ -51,7 +52,7 @@ dependencies:
   - python=3.12
   - pip
   - pip:
-   lightning-setup-${VERSION}.sh - --index-url https://download.pytorch.org/whl/xpu
+    - --index-url https://download.pytorch.org/whl/xpu
     - --extra-index-url https://pypi.org/simple
     - lightning[extra]
     - litmodels
@@ -61,14 +62,22 @@ dependencies:
     - -e ..
 EOF
 
+# Delete any pre-existing environment.
+if [ -d "~/miniforge3/envs/${ENV_NAME}" ]; then
+    echo ""
+    echo "Removing existing environment: ${ENV_NAME}."
+    conda env remove -n ${ENV_NAME} -y
+fi
+
+# Create and activate the environment.
 conda env remove -n ${ENV_NAME} -y
 conda env create -f ${ENV_NAME}.yml
 CMD="conda activate ${ENV_NAME}"
-echo ${CMD} >> lightning-setup-${VERSION}.sh
+echo ${CMD} >> ${SETUP}
 
 echo "Lightning installation completed: $(date)"
 echo "Installation time: $((${SECONDS}-${T0})) seconds"
 
 echo ""
 echo "Set up environment for lightning with:"
-echo "source lightning-setup-${VERSION}.sh"
+echo "source ${SETUP}"
