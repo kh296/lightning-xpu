@@ -147,11 +147,16 @@ class XPUAccelerator(Accelerator):
     def is_available() -> bool:
         return torch.xpu.is_available()
 
+    @staticmethod
+    @override
+    def name() -> str:
+        return "xpu"
+
     @classmethod
     @override
     def register_accelerators(cls, accelerator_registry: Any) -> None:
         accelerator_registry.register(
-            "xpu",
+            cls.name(),
             cls,
             description=cls.__class__.__name__,
         )

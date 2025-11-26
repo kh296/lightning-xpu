@@ -24,6 +24,14 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 """
 import sys
 
+# Ensure that function
+# lightning.pytorch.utilities.imports.lightning.pytorch.utilities.imports
+# is defined, to allow use of this package both with lightning 2.5.5
+# and with lightning 2.5.6, where the function was removed.
+import lightning.pytorch.utilities.imports as imports
+if not hasattr(imports, "_habana_available_and_importable()"):
+    imports._habana_available_and_importable = lambda : False
+
 from lightning.pytorch.accelerators import AcceleratorRegistry
 from lightning.fabric.utilities.registry import _register_classes
 from lightning.pytorch.accelerators.accelerator import Accelerator
