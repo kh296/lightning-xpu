@@ -80,7 +80,7 @@ SLURM_NTASKS=$((${SLURM_NNODES}*${SLURM_NTASKS_PER_NODE}))
 if [[ -z "${SLURM_CPUS_ON_NODE}" ]]; then
     SLURM_CPUS_ON_NODE=1
 fi
-export SLURM_CPUS_PER_TASK=$((${SLURM_CPUS_ON_NODE}/${SLURM_NTASKS_PER_NODE}))
+#export SLURM_CPUS_PER_TASK=$((${SLURM_CPUS_ON_NODE}/${SLURM_NTASKS_PER_NODE}))
 
 # Unset and set Slurm variables for compatibility with srun.
 unset SLURM_MEM_PER_CPU
