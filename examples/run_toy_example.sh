@@ -59,10 +59,10 @@ if [[ -z "${SLURM_NNODES}" ]]; then
 fi
 
 # Determine number of root devices per GPU on Dawn.
-if [[ "COMPOSITE" == ${ZE_FLAT_DEVICE_HIERARCHY} ]]; then
-    DEVICES_PER_GPU=1
-else
+if [[ "FLAT" == ${ZE_FLAT_DEVICE_HIERARCHY} ]]; then
     DEVICES_PER_GPU=2
+else
+    DEVICES_PER_GPU=1
 fi
 
 # Determine number of tasks per node, with one task per GPU root device,
