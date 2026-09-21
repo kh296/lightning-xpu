@@ -138,13 +138,13 @@ then
     # Initial package import can be slow.  Perform before running
     # application, so that the initial time isn't included in
     # the application timing.
-    echo "Performing initial import of lightning_xpu on each node"
+    echo "Performing initial import of lightning on each node"
     T2=${SECONDS}
-    eval "${SRUN_ONE_PER_NODE} python -c 'import lightning_xpu'"
+    eval "${SRUN_ONE_PER_NODE} python -c 'import lightning'"
     echo "Import time 1: $((${SECONDS}-${T2})) seconds"
-    echo "Performing second import of lightning_xpu on each node"
+    echo "Performing second import of lightning on each node"
     T2=${SECONDS}
-    eval "${SRUN_ONE_PER_NODE} python -c 'import lightning_xpu'"
+    eval "${SRUN_ONE_PER_NODE} python -c 'import lightning'"
     echo "Import time 2: $((${SECONDS}-${T2})) seconds"
     # Define command to run application.
     CMD="srun --nodes=${SLURM_NNODES} --ntasks-per-node=${SLURM_NTASKS_PER_NODE} python ${APP}"
@@ -155,10 +155,10 @@ else
     # Initial package import can be slow.  Perform before running
     # application, so that the initial time isn't included in
     # the application timing.
-    echo "Performing initial import of lightning_xpu"
+    echo "Performing initial import of lightning"
     T2=${SECONDS}
     echo "Import time: $((${SECONDS}-${T2})) seconds"
-    python -c "import lightning_xpu"
+    python -c "import lightning"
     # Define command to run application.
     CMD="python ${APP}"
 fi

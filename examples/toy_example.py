@@ -18,7 +18,7 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 # ! pip install torchvision
 try:
     import lightning_xpu
-except ModuleNotFoundError
+except ModuleNotFoundError:
     pass
 import torch, torch.nn as nn, torch.utils.data as data, torchvision as tv, torch.nn.functional as F
 import lightning as L
