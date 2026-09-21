@@ -16,6 +16,7 @@ PyTorch Lightning is licensed under version 2.0 of the Apache License:
 
 # main.py
 # ! pip install torchvision
+import os
 try:
     import lightning_xpu
 except ModuleNotFoundError:
@@ -66,5 +67,6 @@ train, val = data.random_split(dataset, [55000, 5000])
 # Step 3: Train
 # -------------------
 autoencoder = LitAutoEncoder()
-trainer = L.Trainer(max_epochs=10)
+trainer = L.Trainer(max_epochs=10,
+    num_nodes=round(float(os.getenv("SLURM_NNODES", 1))))
 trainer.fit(autoencoder, data.DataLoader(train), data.DataLoader(val))
